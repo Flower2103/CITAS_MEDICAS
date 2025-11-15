@@ -1,0 +1,34 @@
+[
+  {
+    "id": "P001",
+    "nombre": "María González",
+    "edad": 35,
+    "telefono": "555-0101",
+    "email": "maria.g@email.com",
+    "fechaRegistro": "2025-01-15"
+  },
+  {
+    "id": "P002",
+    "nombre": "Laura Meza",
+    "edad": 60,
+    "telefono": "555-0188",
+    "email": "laura.g@email.com",
+    "fechaRegistro": "2023-01-17"
+  },
+  {
+    "id": "P003",
+    "nombre": "Flor Mayon",
+    "edad": 30,
+    "telefono": "555-6666",
+    "email": "eva.g@email.com",
+    "fechaRegistro": "2024-11-15"
+  },
+  {
+    "id": "P004",
+    "nombre": "Arturo Peralta",
+    "edad": 40,
+    "telefono": "555-1111",
+    "email": "peralta@email.com",
+    "fechaRegistro": "2025-11-11"
+  }
+]

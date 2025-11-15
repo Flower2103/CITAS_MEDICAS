@@ -1,0 +1,44 @@
+[
+  {
+    "id": "D001",
+    "nombre": "Dr. Carlos Méndez",
+    "especialidad": "Cardiología",
+    "horarioInicio": "09:00",
+    "horarioFin": "17:00",
+    "diasDisponibles": [
+      "Lunes",
+      "Martes",
+      "Miercoles",
+      "Jueves",
+      "Viernes"
+    ]
+  },
+  {
+    "id": "D002",
+    "nombre": "Dr. Ana López",
+    "especialidad": "Obstetrícia",
+    "horarioInicio": "09:00",
+    "horarioFin": "17:00",
+    "diasDisponibles": [
+      "Lunes",
+      "Martes",
+      "Miercoles",
+      "Jueves",
+      "Viernes"
+    ]
+  },
+  {
+    "id": "D003",
+    "nombre": "Dr. Juan Pérez",
+    "especialidad": "UCIN",
+    "horarioInicio": "09:00",
+    "horarioFin": "24:00",
+    "diasDisponibles": [
+      "Lunes",
+      "Martes",
+      "Miercoles",
+      "Jueves",
+      "Viernes"
+    ]
+  }
+]
