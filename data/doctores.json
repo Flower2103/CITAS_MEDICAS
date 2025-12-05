@@ -2,13 +2,12 @@
   {
     "id": "D001",
     "nombre": "Dr. Carlos Méndez",
-    "especialidad": "Cardiología",
+    "especialidad": "Pediatría",
     "horarioInicio": "09:00",
-    "horarioFin": "24:00",
+    "horarioFin": "01:00",
     "diasDisponibles": [
       "Lunes",
       "Martes",
-      "Miercoles",
       "Jueves",
       "Viernes"
     ]
@@ -16,13 +15,12 @@
   {
     "id": "D002",
     "nombre": "Dr. Ana López",
-    "especialidad": "Obstetrícia",
+    "especialidad": "Dermatología",
     "horarioInicio": "09:00",
     "horarioFin": "17:00",
     "diasDisponibles": [
       "Lunes",
       "Martes",
-      "Miercoles",
       "Jueves",
       "Viernes"
     ]
@@ -52,7 +50,8 @@
       "Martes",
       "Miercoles",
       "Jueves",
-      "Viernes"
+      "Viernes",
+      "Sabado"
     ]
   }
 ]

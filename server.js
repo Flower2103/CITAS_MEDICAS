@@ -3,8 +3,7 @@ const fs = require("fs").promises;
 const path = require("path");
 const app = express();
 
-// Definir puerto
-const PORT1 = 3000;
+
 
 app.use(express.json());
 
@@ -14,10 +13,6 @@ app.use(express.static(path.join(__dirname, "frontend")));
 // Servir carpeta data
 app.use("/data", express.static(path.join(__dirname, "data")));
 
-// Iniciar servidor
-app.listen(PORT1, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
 
 // ------------------ FUNCIONES AUXILIARES ------------------
 
@@ -248,6 +243,7 @@ app.get("/doctores/especialidad/:esp", async (req, res) => {
     res.status(500).json({ error: "Error al buscar doctores" });
   }
 });
+
 
 // ------------------ CITAS ------------------
 

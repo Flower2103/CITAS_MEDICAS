@@ -2,40 +2,130 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Doctores</title>
+  <title>Gestión de Doctores</title>
   <link rel="stylesheet" href="../css/styles.css">
 </head>
-<body>
-  <header>
-    <h1>Doctores</h1>
-    <a href="../index.html">Volver</a>
-  </header>
+<body class="fondo-doctores">
 
-  <main>
-    <section id="doctores-section">
-      <ul id="doctores-list"></ul>
-      <form id="doctores-form">
-        <input type="text" name="nombre" placeholder="Nombre" required>
-        <input type="text" name="especialidad" placeholder="Especialidad" required>
+<header>
+  <h1>Gestión de Doctores</h1>
+  <a class="btn-volver" href="../index.html">← Volver</a>
+</header>
+
+
+
+<main>
+
+  <!-- BUSCADOR Y BOTÓN -->
+  <section>
+    <input type="text" id="buscador" placeholder="Buscar por Nombre o Especialidad">
+    <button id="btnBuscar">Buscar</button>
+    <button id="btnNuevo">Nuevo Doctor</button>
+     <!-- filtrar Especialidad -->
+    <label for="filtroEspecialidad">Filtrar por especialidad:</label>
+    <select id="filtroEspecialidad">
+      <option value="">Todas</option>
+    </select>
+  </section>
+
+<!-- TABLA DOCTORES -->
+  <table border="1" width="100%">
+    <thead>
+      <tr>
+        <th>Registro</th>
+        <th>Nombre</th>
+        <th>Especialidad</th>
+        <th>Horario</th>
+        <th>Días Disponibles</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody id="tablaDoctores"></tbody>
+  </table>
+
+
+  <!-- FORMULARIO DE DOCTOR -->
+  <section id="formularioDoctor" style="display:none; margin-top:30px;">
+    <h2 id="tituloForm">Nuevo Doctor</h2>
+    <form id="formDoctor">
+      <input type="hidden" name="id">
+
+      <label>
+        Nombre completo:
+        <input type="text" name="nombre" required>
+      </label>
+
+      <label>
+        Especialidad:
+        <select name="especialidad" required>
+          <option value="">Seleccionar</option>
+          <option value="Cardiología">Cardiología</option>
+          <option value="Pediatría">Pediatría</option>
+          <option value="Dermatología">Dermatología</option>
+          <option value="Ginecología">Ginecología</option>
+          <option value="Odontología">Odontología</option>
+        </select>
+      </label>
+
+      <label>
+        Horario inicio:
         <input type="time" name="horarioInicio" required>
-        <input type="time" name="horarioFin" required>
-        <fieldset>
-          <legend>Días Disponibles</legend>
-          <label><input type="checkbox" name="dias" value="Lunes">Lunes</label>
-          <label><input type="checkbox" name="dias" value="Martes">Martes</label>
-          <label><input type="checkbox" name="dias" value="Miercoles">Miércoles</label>
-          <label><input type="checkbox" name="dias" value="Jueves">Jueves</label>
-          <label><input type="checkbox" name="dias" value="Viernes">Viernes</label>
-          <label><input type="checkbox" name="dias" value="Sabado">Sábado</label>
-          <label><input type="checkbox" name="dias" value="Domingo">Domingo</label>
-        </fieldset>
-        <button type="submit">Agregar Doctor</button>
-      </form>
-    </section>
-  </main>
+      </label>
 
-  <script src="../js/api.js"></script>
-  <script src="../js/doctores.js"></script>
+      <label>
+        Horario fin:
+        <input type="time" name="horarioFin" required>
+      </label>
+
+      <fieldset>
+        <legend>Días disponibles (mínimo 1)</legend>
+        <label><input type="checkbox" name="dias" value="Lunes">Lunes</label>
+        <label><input type="checkbox" name="dias" value="Martes">Martes</label>
+        <label><input type="checkbox" name="dias" value="Miércoles">Miércoles</label>
+        <label><input type="checkbox" name="dias" value="Jueves">Jueves</label>
+        <label><input type="checkbox" name="dias" value="Viernes">Viernes</label>
+        <label><input type="checkbox" name="dias" value="Sábado">Sábado</label>
+        <label><input type="checkbox" name="dias" value="Domingo">Domingo</label>
+      </fieldset>
+
+      <button type="submit">Guardar</button>
+      <button type="button" id="btnCancelar">Cancelar</button>
+       <div id="msgServidor" style="margin-top:10px; color:green;"></div>
+    </form>
+  </section>
+
+  <section id="agendaSection" style="display:none; margin-top:30px;">
+  <h2>Agenda de Doctor</h2>
+  <div id="doctorInfo"></div>
+
+<!--MOSTRAR AGENDA-->>
+  <div>
+    <button onclick="filtrarAgenda('todas')">Todas</button>
+    <button onclick="filtrarAgenda('programada')">Programadas</button>
+    <button onclick="filtrarAgenda('cancelada')">Canceladas</button>
+    <button onclick="filtrarAgenda('completada')">Completadas</button>
+    <button onclick="limpiarAgenda()">Cerrar Agenda</button>
+  </div>
+
+  <table border="1" width="100%">
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Hora</th>
+        <th>Paciente</th>
+        <th>Especialidad</th>
+        <th>Motivo</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody id="tablaAgenda"></tbody>
+  </table>
+</section>
+
+
+</main>
+
+<script src="../js/api.js"></script>
+<script src="../js/doctores.js"></script>
 </body>
 </html>

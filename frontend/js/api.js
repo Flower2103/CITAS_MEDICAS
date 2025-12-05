@@ -54,6 +54,12 @@ async function addDoctor(doctor) {
   });
 }
 
+// AGENDA HISTORIAL DE DOCTOR
+async function getHistorialDoctor(idDoctor) {
+  return fetchData(`/doctores/${idDoctor}/citas`);
+}
+
+
 // ----------------- CITAS -----------------
 async function getCitas() {
   return fetchData('/citas');

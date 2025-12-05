@@ -5,25 +5,85 @@ body {
   background-color: #f2f2f2;
 }
 
+/* ENCABEZADO MEJORADO */
 header {
-  background-color: #2e79d4;
+  background: linear-gradient(90deg, #1e5fb8, #2e79d4);
+  color: #ffffff;
+  padding: 1rem 2rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* NAV HORIZONTAL */
+header nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 2rem;
+}
+
+/* ENLACES */
+header nav ul li a {
   color: white;
-  padding: 1rem;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.1rem;
+  transition: 0.3s;
 }
 
-nav {
-  margin-top: 1rem;
+/* HOVER */
+header nav ul li a:hover {
+  text-decoration: underline;
 }
 
-nav button {
-  margin-right: 1rem;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-}
 
 main {
   padding: 1rem;
 }
+/* CONTENEDOR DE LAS TARJETAS */
+#estadisticas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem 0;
+  max-width: 1000px;   /* límite para que no ocupen TODO */
+  margin: 0 auto;      /* centra el bloque */
+}
+
+/* TARJETA MEJORADA */
+.card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* EFECTO HOVER */
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+}
+
+/* TÍTULOS EN LAS TARJETAS */
+.card h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+  color: #2e79d4;
+}
+
+/* VALORES DE LAS TARJETAS */
+.card p {
+  font-size: 2rem;
+  font-weight: bold;
+  margin: 0;
+  color: #333;
+}
+
 
 .card {
   background: white;
@@ -31,4 +91,55 @@ main {
   margin-bottom: 1rem;
   border-radius: 5px;
   box-shadow: 0px 0px 5px #ccc;
+}
+
+.btn-volver {
+  background: #ffffff;
+  color: #1e5fb8;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1rem;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+
+.btn-volver:hover {
+  background: #dbe9ff;
+  border-color: #ffffff;
+  transform: translateY(-2px);
+}
+
+/* PRESIONADO */
+.btn-volver:active {
+  transform: scale(0.95);
+}
+
+
+.fondo-doctores {
+  background-image: url('../assets/fondo_doctores.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+.fondo-pacientes {
+  background-image: url('../assets/fondo_paciente.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.fondo-citas {
+  background-image: url('../assets/fondo_citas.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
