@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Citas</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Citas</h1>
+    <a href="../index.html">Volver</a>
+  </header>
+
+  <main>
+    <section id="citas-section">
+      <ul id="citas-list"></ul>
+      <form id="citas-form">
+        <select name="pacienteId" required></select>
+        <select name="doctorId" required></select>
+        <input type="date" name="fecha" required>
+        <input type="time" name="hora" required>
+        <button type="submit">Agendar Cita</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/citas.js"></script>
+</body>
+</html>

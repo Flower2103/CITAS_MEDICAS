@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doctores</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Doctores</h1>
+    <a href="../index.html">Volver</a>
+  </header>
+
+  <main>
+    <section id="doctores-section">
+      <ul id="doctores-list"></ul>
+      <form id="doctores-form">
+        <input type="text" name="nombre" placeholder="Nombre" required>
+        <input type="text" name="especialidad" placeholder="Especialidad" required>
+        <input type="time" name="horarioInicio" required>
+        <input type="time" name="horarioFin" required>
+        <fieldset>
+          <legend>Días Disponibles</legend>
+          <label><input type="checkbox" name="dias" value="Lunes">Lunes</label>
+          <label><input type="checkbox" name="dias" value="Martes">Martes</label>
+          <label><input type="checkbox" name="dias" value="Miercoles">Miércoles</label>
+          <label><input type="checkbox" name="dias" value="Jueves">Jueves</label>
+          <label><input type="checkbox" name="dias" value="Viernes">Viernes</label>
+          <label><input type="checkbox" name="dias" value="Sabado">Sábado</label>
+          <label><input type="checkbox" name="dias" value="Domingo">Domingo</label>
+        </fieldset>
+        <button type="submit">Agregar Doctor</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/doctores.js"></script>
+</body>
+</html>

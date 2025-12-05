@@ -1,11 +1,23 @@
-
-
-
 const express = require("express");
 const fs = require("fs").promises;
+const path = require("path");
 const app = express();
 
+// Definir puerto
+const PORT1 = 3000;
+
 app.use(express.json());
+
+// Servir carpeta frontend
+app.use(express.static(path.join(__dirname, "frontend")));
+
+// Servir carpeta data
+app.use("/data", express.static(path.join(__dirname, "data")));
+
+// Iniciar servidor
+app.listen(PORT1, () => {
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+});
 
 // ------------------ FUNCIONES AUXILIARES ------------------
 
@@ -26,30 +38,53 @@ app.post("/pacientes", async (req, res) => {
     const pacientes = await readJSON("./data/pacientes.json");
     const nuevo = req.body;
 
-if (
-  nuevo.id == null ||
-  nuevo.nombre == null ||
-  nuevo.edad == null ||
-  nuevo.telefono == null ||
-  nuevo.email == null) 
-  {return res.status(400).json({ error: "Faltan datos obligatorios" });}
-    // ID único
-    if (pacientes.some(p => p.id === nuevo.id)) {
-      return res.status(400).json({ error: "El ID ya existe" });
+    // Validar datos obligatorios 
+    if (
+      nuevo.nombre == null ||
+      nuevo.edad == null ||
+      nuevo.telefono == null ||
+      nuevo.email == null
+    ) {
+      return res.status(400).json({ error: "Faltan datos obligatorios" });
     }
 
+    // Verificar email único
     if (pacientes.some(p => p.email === nuevo.email)) {
       return res.status(400).json({ error: "El email ya está registrado" });
     }
 
+    // Validar edad positiva
     if (nuevo.edad <= 0) {
       return res.status(400).json({ error: "La edad debe ser mayor a 0" });
     }
+    if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/.test(nuevo.nombre)) {
+      return res.status(400).json({ error: "El nombre solo puede contener letras y espacios" });
+    }
+    if (!/^\d{10,}$/.test(nuevo.telefono)) {
+      return res.status(400).json({ error: "Teléfono inválido. Solo números y mínimo 10 dígitos" });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nuevo.email)) {
+    return res.status(400).json({ error: "Email inválido" });
+    }
+
+
+    // ------------------------------
+    // GENERAR ID AUTOINCREMENTABLE
+    // ------------------------------
+    const ultimoId = pacientes.length > 0
+      ? Math.max(...pacientes.map(p => parseInt(p.id.replace("P",""))))
+      : 0;
+
+    nuevo.id = "P" + String(ultimoId + 1).padStart(3, "0");
+    // ------------------------------
 
     nuevo.fechaRegistro = new Date().toISOString().split("T")[0];
+
     pacientes.push(nuevo);
     await writeJSON("./data/pacientes.json", pacientes);
+
     res.status(201).json(nuevo);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Error al registrar paciente" });
@@ -65,6 +100,7 @@ app.get("/pacientes", async (req, res) => {
     res.status(500).json({ error: "Error al leer pacientes" });
   }
 });
+
 
 // GET /pacientes/:id - Obtener por ID
 app.get("/pacientes/:id", async (req, res) => {
@@ -86,9 +122,27 @@ app.put("/pacientes/:id", async (req, res) => {
     if (idx === -1) return res.status(404).json({ error: "Paciente no encontrado" });
 
     const { id, ...actualizaciones } = req.body; // bloqueamos cambios de id
+    //VALIDACIONES
     if (actualizaciones.edad && actualizaciones.edad <= 0) {
       return res.status(400).json({ error: "La edad debe ser mayor a 0" });
     }
+    if (actualizaciones.nombre && !/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/.test(actualizaciones.nombre)) {
+      return res.status(400).json({ error: "El nombre solo puede contener letras y espacios" });
+    }
+    if (actualizaciones.telefono && !/^\d{10,}$/.test(actualizaciones.telefono)) {
+      return res.status(400).json({ error: "Teléfono inválido. Solo números y mínimo 10 dígitos" });
+    }
+    if (actualizaciones.email) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(actualizaciones.email)) {
+        return res.status(400).json({ error: "Email inválido" });
+      }
+      // Verificar duplicado en otros pacientes
+      const duplicado = pacientes.find(p => p.email === actualizaciones.email && p.id !== req.params.id);
+      if (duplicado) {
+        return res.status(400).json({ error: "El email ya está registrado" });
+      }
+    }
+
 
     pacientes[idx] = { ...pacientes[idx], ...actualizaciones };
     await writeJSON("./data/pacientes.json", pacientes);
@@ -286,6 +340,72 @@ app.get("/citas", async (req, res) => {
   }
 });
 
+// GET /citas/proximas
+app.get("/citas/proximas", async (req, res) => {
+  try {
+    const citas = await readJSON("./data/citas.json");
+    const ahora = new Date();
+    const fin = new Date(ahora.getTime() + 24 * 60 * 60 * 1000); // 24 horas
+
+    const proximas = citas.filter(c => {
+      const fechaCita = new Date(`${c.fecha}T${c.hora}`);
+      return c.estado === "programada" && fechaCita >= ahora && fechaCita <= fin;
+    });
+
+    res.json(proximas);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al obtener citas próximas" });
+  }
+});
+
+// GET /citas?fecha=YYYY-MM-DD&estado=programada
+app.get("/doctores/disponibles", async (req, res) => {
+  try {
+    const { fecha, hora } = req.query;
+    if (!fecha || !hora) return res.status(400).json({ error: "Falta fecha u hora" });
+
+    const doctores = await readJSON("./data/doctores.json");
+    const citas = await readJSON("./data/citas.json");
+
+    const fechaCita = new Date(`${fecha}T${hora}`);
+    const dias = ["Domingo","Lunes","Martes","Miercoles","Jueves","Viernes","Sabado"];
+    const diaCita = dias[fechaCita.getDay()];
+
+    const disponibles = doctores.filter(d => {
+      // Día disponible (normalizado)
+      const diasDoc = d.diasDisponibles.map(x => x.toLowerCase().trim());
+      if (!diasDoc.includes(diaCita.toLowerCase())) return false;
+
+      // Horario disponible
+      const [hInicio, mInicio] = d.horarioInicio.split(":").map(Number);
+      let [hFin, mFin] = d.horarioFin.split(":").map(Number);
+      if (hFin === 24) hFin = 23;  // Ajuste para JS
+      const minutosInicio = hInicio * 60 + mInicio;
+      const minutosFin = hFin * 60 + mFin;
+      const [hCita, mCita] = hora.split(":").map(Number);
+      const minutosCita = hCita * 60 + mCita;
+
+      if (minutosCita < minutosInicio || minutosCita >= minutosFin) return false;
+
+      // Verificar si doctor ya tiene cita
+      const ocupado = citas.some(c => 
+        c.doctorId === d.id &&
+        c.fecha === fecha &&
+        c.hora === hora &&
+        c.estado === "programada"
+      );
+      return !ocupado;
+    });
+
+    res.json(disponibles);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al buscar doctores disponibles" });
+  }
+});
 // GET /citas/:id
 app.get("/citas/:id", async (req, res) => {
   try {
@@ -395,74 +515,8 @@ app.get("/estadisticas/especialidades", async (req, res) => {
   }
 });
 
-// GET /citas?fecha=YYYY-MM-DD&estado=programada
-app.get("/doctores/disponibles", async (req, res) => {
-  try {
-    const { fecha, hora } = req.query;
-    if (!fecha || !hora) return res.status(400).json({ error: "Falta fecha u hora" });
-
-    const doctores = await readJSON("./data/doctores.json");
-    const citas = await readJSON("./data/citas.json");
-
-    const fechaCita = new Date(`${fecha}T${hora}`);
-    const dias = ["Domingo","Lunes","Martes","Miercoles","Jueves","Viernes","Sabado"];
-    const diaCita = dias[fechaCita.getDay()];
-
-    const disponibles = doctores.filter(d => {
-      // Día disponible (normalizado)
-      const diasDoc = d.diasDisponibles.map(x => x.toLowerCase().trim());
-      if (!diasDoc.includes(diaCita.toLowerCase())) return false;
-
-      // Horario disponible
-      const [hInicio, mInicio] = d.horarioInicio.split(":").map(Number);
-      let [hFin, mFin] = d.horarioFin.split(":").map(Number);
-      if (hFin === 24) hFin = 23;  // Ajuste para JS
-      const minutosInicio = hInicio * 60 + mInicio;
-      const minutosFin = hFin * 60 + mFin;
-      const [hCita, mCita] = hora.split(":").map(Number);
-      const minutosCita = hCita * 60 + mCita;
-
-      if (minutosCita < minutosInicio || minutosCita >= minutosFin) return false;
-
-      // Verificar si doctor ya tiene cita
-      const ocupado = citas.some(c => 
-        c.doctorId === d.id &&
-        c.fecha === fecha &&
-        c.hora === hora &&
-        c.estado === "programada"
-      );
-      return !ocupado;
-    });
-
-    res.json(disponibles);
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Error al buscar doctores disponibles" });
-  }
-});
 
 
-
-// GET /citas/proximas
-app.get("/citas/proximas", async (req, res) => {
-  try {
-    const citas = await readJSON("./data/citas.json");
-    const ahora = new Date();
-    const fin = new Date(ahora.getTime() + 24 * 60 * 60 * 1000); // 24 horas
-
-    const proximas = citas.filter(c => {
-      const fechaCita = new Date(`${c.fecha}T${c.hora}`);
-      return c.estado === "programada" && fechaCita >= ahora && fechaCita <= fin;
-    });
-
-    res.json(proximas);
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Error al obtener citas próximas" });
-  }
-});
 
 
 

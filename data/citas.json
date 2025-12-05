@@ -66,8 +66,8 @@
     "id": "C008",
     "pacienteId": "P001",
     "doctorId": "D001",
-    "fecha": "2025-11-17",
-    "hora": "13:00",
+    "fecha": "2025-12-04",
+    "hora": "20:00",
     "motivo": "Revisión general",
     "estado": "programada"
   }

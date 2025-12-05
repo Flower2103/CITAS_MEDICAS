@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestión de Pacientes</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+<header>
+  <h1>Gestión de Pacientes</h1>
+  <a href="../index.html">⬅ Volver</a>
+</header>
+
+<main>
+
+  <!-- BUSCADOR Y BOTÓN -->
+  <section>
+    <input type="text" id="buscador" placeholder="Buscar por ID o Nombre">
+    <button id="btnBuscar">Buscar</button>
+    <button id="btnNuevo">Nuevo Paciente</button>
+  </section>
+
+  <!-- TABLA PACIENTES-->
+  <table border="1" width="100%">
+    <thead>
+      <tr>
+        <th>Registro</th>
+        <th>Nombre</th>
+        <th>Edad</th>
+        <th>Teléfono</th>
+        <th>Email</th>
+        <th>Fecha Registro</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody id="tablaPacientes"></tbody>
+  </table>
+
+  <!-- HISTORIAL DE CITAS DEL PACIENTE -->
+<section id="historialSection" style="display:none; margin-top:30px;">
+  <h2 id="headerPaciente"></h2>
+
+  <!-- FILTROS -->
+  <div>
+    <button onclick="filtrarHistorial('todas')">Todas</button>
+    <button onclick="filtrarHistorial('programada')">Programadas</button>
+    <button onclick="filtrarHistorial('cancelada')">Canceladas</button>
+    <button onclick="filtrarHistorial('completada')">Completadas</button>
+    <button onclick="limpiarHistorial()">Cerrar Historial</button>
+  </div>
+
+  <table border="1" width="100%">
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Hora</th>
+        <th>Doctor</th>
+        <th>Especialidad</th>
+        <th>Motivo</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody id="tablaHistorial"></tbody>
+  </table>
+</section>
+
+
+
+<!-- FORMULARIO DE PACIENTE -->
+ <p id="msgServidor"></p>
+<section id="formularioPaciente" style="display:none;">
+  <h2 id="tituloForm">Nuevo Paciente</h2>
+
+  <form id="formPaciente">
+    <label>
+      Nombre completo:
+      <input type="text" name="nombre" required>
+      <span class="error" id="errorNombre"></span>
+    </label>
+    <label>
+      Edad:
+      <input type="number" name="edad" min="1" required>
+      <span class="error" id="errorEdad"></span>
+    </label>
+    <label>
+      Teléfono:
+      <input type="tel" name="telefono" required>
+      <span class="error" id="errorTelefono"></span>
+    </label>
+    <label>
+      Email:
+      <input type="email" name="email" required>
+      <span class="error" id="errorEmail"></span>
+    </label>
+
+    <button type="submit">Guardar</button>
+    <button type="button" id="btnCancelar">Cancelar</button>
+    
+  </form>
+</section>
+
+
+</main>
+
+<script src="../js/api.js"></script>
+<script src="../js/pacientes.js"></script>
+</body>
+</html>

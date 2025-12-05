@@ -2,17 +2,17 @@
   {
     "id": "P001",
     "nombre": "María González",
-    "edad": 35,
-    "telefono": "555-0101",
-    "email": "maria.g@email.com",
+    "edad": 3,
+    "telefono": "6461234569",
+    "email": "maria1@email.com",
     "fechaRegistro": "2025-01-15"
   },
   {
     "id": "P002",
     "nombre": "Laura Meza",
     "edad": 60,
-    "telefono": "555-0188",
-    "email": "laura.g@email.com",
+    "telefono": "55501887445",
+    "email": "maria@email.com",
     "fechaRegistro": "2023-01-17"
   },
   {
@@ -37,6 +37,6 @@
     "edad": 20,
     "telefono": "555-11444",
     "email": "brenda@email.com",
-    "fechaRegistro": "2025-11-15"
+    "fechaRegistro": "2025-12-04"
   }
 ]
