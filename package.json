@@ -1,7 +1,7 @@
 {
   "name": "proyecto",
   "version": "1.0.0",
-  "description": "",
+  "description": "API para gestionar pacientes, doctores y citas médicas. Permite registrar pacientes y doctores, crear, cancelar y consultar citas, así como obtener estadísticas y disponibilidad de doctores.",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -17,5 +17,14 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.11"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Flower2103/LABORATORIO-APIS---EVALUACION.git"
+  },
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Flower2103/LABORATORIO-APIS---EVALUACION/issues"
+  },
+  "homepage": "https://github.com/Flower2103/LABORATORIO-APIS---EVALUACION#readme"
 }

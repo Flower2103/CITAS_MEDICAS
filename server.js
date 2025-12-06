@@ -244,6 +244,35 @@ app.get("/doctores/especialidad/:esp", async (req, res) => {
   }
 });
 
+// GET /doctores/:id/citas - Obtener agenda del doctor
+app.get("/doctores/:id/citas", async (req, res) => {
+  try {
+    const doctorId = req.params.id;
+
+    const doctores = await readJSON("./data/doctores.json");
+    const citas = await readJSON("./data/citas.json");
+    const pacientes = await readJSON("./data/pacientes.json");
+
+    const doctor = doctores.find(d => d.id === doctorId);
+    if (!doctor) {
+      return res.status(404).json({ error: "Doctor no encontrado" });
+    }
+
+    // Filtrar citas del doctor
+    const agenda = citas
+      .filter(c => c.doctorId === doctorId)
+      .map(c => ({
+        ...c,
+        pacienteNombre: pacientes.find(p => p.id === c.pacienteId)?.nombre || "—"
+      }));
+
+    res.json(agenda);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al obtener citas del doctor" });
+  }
+});
 
 // ------------------ CITAS ------------------
 
