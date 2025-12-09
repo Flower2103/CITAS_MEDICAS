@@ -1,10 +1,10 @@
 [
   {
     "id": "P001",
-    "nombre": "María González",
-    "edad": 3,
-    "telefono": "6461234569",
-    "email": "maria1@email.com",
+    "nombre": "Jose Perez",
+    "edad": 1,
+    "telefono": "1265478954",
+    "email": "jose@email.com",
     "fechaRegistro": "2025-01-15"
   },
   {
@@ -19,8 +19,8 @@
     "id": "P003",
     "nombre": "Flor Mayon",
     "edad": 30,
-    "telefono": "555-6666",
-    "email": "eva.g@email.com",
+    "telefono": "1478545692",
+    "email": "florg@email.com",
     "fechaRegistro": "2024-11-15"
   },
   {
@@ -35,8 +35,24 @@
     "id": "P005",
     "nombre": "Brenda Sanchez",
     "edad": 20,
-    "telefono": "555-11444",
+    "telefono": "5551144423",
     "email": "brenda@email.com",
     "fechaRegistro": "2025-12-04"
+  },
+  {
+    "nombre": "Luz Rodriguez",
+    "edad": 5,
+    "telefono": "6461259878",
+    "email": "luz@gmail.com",
+    "id": "P006",
+    "fechaRegistro": "2025-12-09"
+  },
+  {
+    "nombre": "Berta Dominguez",
+    "edad": 7,
+    "telefono": "4456987451",
+    "email": "berta@hotmail.com",
+    "id": "P007",
+    "fechaRegistro": "2025-12-09"
   }
 ]

@@ -2,9 +2,9 @@
   {
     "id": "D001",
     "nombre": "Dr. Carlos Méndez",
-    "especialidad": "Pediatría",
+    "especialidad": "Cardiología",
     "horarioInicio": "09:00",
-    "horarioFin": "01:00",
+    "horarioFin": "13:00",
     "diasDisponibles": [
       "Lunes",
       "Martes",
@@ -28,13 +28,13 @@
   {
     "id": "D003",
     "nombre": "Dr. Juan Pérez",
-    "especialidad": "UCIN",
+    "especialidad": "Pediatría",
     "horarioInicio": "09:00",
-    "horarioFin": "24:00",
+    "horarioFin": "12:00",
     "diasDisponibles": [
       "Lunes",
       "Martes",
-      "Miercoles",
+      "Miércoles",
       "Jueves",
       "Viernes"
     ]
@@ -42,16 +42,26 @@
   {
     "id": "D004",
     "nombre": "Dr. Eva Luna",
-    "especialidad": "Geriatria",
+    "especialidad": "Cardiología",
     "horarioInicio": "08:00",
     "horarioFin": "14:00",
     "diasDisponibles": [
       "Lunes",
       "Martes",
-      "Miercoles",
       "Jueves",
-      "Viernes",
-      "Sabado"
+      "Viernes"
     ]
+  },
+  {
+    "nombre": "María González Aranda",
+    "especialidad": "Pediatría",
+    "horarioInicio": "01:00",
+    "horarioFin": "11:00",
+    "diasDisponibles": [
+      "Lunes",
+      "Miércoles",
+      "Sábado"
+    ],
+    "id": "D005"
   }
 ]

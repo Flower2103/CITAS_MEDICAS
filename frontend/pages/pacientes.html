@@ -2,108 +2,135 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestión de Pacientes</title>
   <link rel="stylesheet" href="../css/styles.css">
 </head>
-<body class="fondo-pacientes">
+<body>
 
 <header>
-  <h1>Gestión de Pacientes</h1>
-  <a class="btn-volver" href="../index.html">← Volver</a>
+  <nav>
+    <ul>
+      <li><a href="../index.html">Inicio</a></li>
+      <li><a href="pacientes.html">Pacientes</a></li>
+      <li><a href="doctores.html">Doctores</a></li>
+      <li><a href="citas.html">Citas</a></li>
+    </ul>
+  </nav>
 </header>
 
 <main>
+  <h1 style="color: #1e5fb8; margin-bottom: 2rem;">Gestión de Pacientes</h1>
 
-  <!-- BUSCADOR Y BOTÓN -->
-  <section>
-    <input type="text" id="buscador" placeholder="Buscar por ID o Nombre">
-    <button id="btnBuscar">Buscar</button>
-    <button id="btnNuevo">Nuevo Paciente</button>
+  <!-- BUSCADOR Y BOTONES -->
+  <section style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); margin-bottom: 2rem;">
+    <input type="text" id="buscador" placeholder="🔍 Buscar por ID o Nombre" style="padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; width: 300px; font-size: 14px;">
+    <button id="btnBuscar" class="btn-actualizar" style="margin-left: 0.5rem;">Buscar</button>
+    <button id="btnNuevo" class="btn-actualizar" style="background: #28a745;">+ Nuevo Paciente</button>
   </section>
 
   <!-- TABLA PACIENTES-->
-  <table border="1" width="100%">
-    <thead>
-      <tr>
-        <th>Registro</th>
-        <th>Nombre</th>
-        <th>Edad</th>
-        <th>Teléfono</th>
-        <th>Email</th>
-        <th>Fecha Registro</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody id="tablaPacientes"></tbody>
-  </table>
+  <section id="citasHoyLista">
+    <h2>📋 Listado de Pacientes</h2>
+    <div class="tabla-citas-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Registro</th>
+            <th>Nombre</th>
+            <th>Edad</th>
+            <th>Teléfono</th>
+            <th>Email</th>
+            <th>Fecha Registro</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tablaPacientes">
+          <tr>
+            <td colspan="7" class="cargando" style="text-align: center; padding: 40px;">
+              Cargando pacientes...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 
   <!-- HISTORIAL DE CITAS DEL PACIENTE -->
-<section id="historialSection" style="display:none; margin-top:30px;">
-  <h2 id="headerPaciente"></h2>
+  <section id="historialSection" style="display:none;" class="graficas-section">
+    <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);">
+      <h2 id="headerPaciente" style="color: #1e5fb8; margin-bottom: 1.5rem;"></h2>
 
-  <!-- FILTROS -->
-  <div>
-    <button onclick="filtrarHistorial('todas')">Todas</button>
-    <button onclick="filtrarHistorial('programada')">Programadas</button>
-    <button onclick="filtrarHistorial('cancelada')">Canceladas</button>
-    <button onclick="filtrarHistorial('completada')">Completadas</button>
-    <button onclick="limpiarHistorial()">Cerrar Historial</button>
-  </div>
+      <!-- FILTROS -->
+      <div style="margin-bottom: 1.5rem;">
+        <button onclick="filtrarHistorial('todas')" class="btn-actualizar">Todas</button>
+        <button onclick="filtrarHistorial('programada')" class="btn-actualizar">Programadas</button>
+        <button onclick="filtrarHistorial('cancelada')" class="btn-actualizar">Canceladas</button>
+        <button onclick="filtrarHistorial('completada')" class="btn-actualizar">Completadas</button>
+        <button onclick="limpiarHistorial()" class="btn-actualizar" style="background: #dc3545;">Cerrar Historial</button>
+      </div>
 
-  <table border="1" width="100%">
-    <thead>
-      <tr>
-        <th>Fecha</th>
-        <th>Hora</th>
-        <th>Doctor</th>
-        <th>Especialidad</th>
-        <th>Motivo</th>
-        <th>Estado</th>
-      </tr>
-    </thead>
-    <tbody id="tablaHistorial"></tbody>
-  </table>
-</section>
+      <div class="tabla-citas-wrapper">
+        <table style="width: 100%; border-collapse: collapse; background: white;">
+          <thead style="background: #6ca9d8; color: white;">
+            <tr>
+              <th style="padding: 16px 20px; text-align: left;">Fecha</th>
+              <th style="padding: 16px 20px; text-align: left;">Hora</th>
+              <th style="padding: 16px 20px; text-align: left;">Doctor</th>
+              <th style="padding: 16px 20px; text-align: left;">Especialidad</th>
+              <th style="padding: 16px 20px; text-align: left;">Motivo</th>
+              <th style="padding: 16px 20px; text-align: left;">Estado</th>
+            </tr>
+          </thead>
+          <tbody id="tablaHistorial"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 
+  <!-- FORMULARIO DE PACIENTE -->
+  <section id="formularioPaciente" style="display:none;" class="graficas-section">
+    <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); max-width: 600px; margin: 0 auto;">
+      <h2 id="tituloForm" style="color: #1e5fb8; margin-bottom: 1.5rem;">Nuevo Paciente</h2>
+      <p id="msgServidor" style="padding: 1rem; border-radius: 8px; margin-bottom: 1rem;"></p>
 
+      <form id="formPaciente" style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <label style="display: flex; flex-direction: column;">
+          <span style="font-weight: 600; color: #333; margin-bottom: 0.5rem;">Nombre completo:</span>
+          <input type="text" name="nombre" required style="padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+          <span class="error" id="errorNombre" style="color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem;"></span>
+        </label>
 
-<!-- FORMULARIO DE PACIENTE -->
- <p id="msgServidor"></p>
-<section id="formularioPaciente" style="display:none;">
-  <h2 id="tituloForm">Nuevo Paciente</h2>
+        <label style="display: flex; flex-direction: column;">
+          <span style="font-weight: 600; color: #333; margin-bottom: 0.5rem;">Edad:</span>
+          <input type="number" name="edad" min="1" required style="padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+          <span class="error" id="errorEdad" style="color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem;"></span>
+        </label>
 
-  <form id="formPaciente">
-    <label>
-      Nombre completo:
-      <input type="text" name="nombre" required>
-      <span class="error" id="errorNombre"></span>
-    </label>
-    <label>
-      Edad:
-      <input type="number" name="edad" min="1" required>
-      <span class="error" id="errorEdad"></span>
-    </label>
-    <label>
-      Teléfono:
-      <input type="tel" name="telefono" required>
-      <span class="error" id="errorTelefono"></span>
-    </label>
-    <label>
-      Email:
-      <input type="email" name="email" required>
-      <span class="error" id="errorEmail"></span>
-    </label>
+        <label style="display: flex; flex-direction: column;">
+          <span style="font-weight: 600; color: #333; margin-bottom: 0.5rem;">Teléfono:</span>
+          <input type="tel" name="telefono" required style="padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+          <span class="error" id="errorTelefono" style="color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem;"></span>
+        </label>
 
-    <button type="submit">Guardar</button>
-    <button type="button" id="btnCancelar">Cancelar</button>
-    
-  </form>
-</section>
+        <label style="display: flex; flex-direction: column;">
+          <span style="font-weight: 600; color: #333; margin-bottom: 0.5rem;">Email:</span>
+          <input type="email" name="email" required style="padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+          <span class="error" id="errorEmail" style="color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem;"></span>
+        </label>
 
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+          <button type="submit" class="btn-actualizar" style="flex: 1;">💾 Guardar</button>
+          <button type="button" id="btnCancelar" class="btn-actualizar" style="background: #6c757d; flex: 1;">✖ Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </section>
 
 </main>
 
 <script src="../js/api.js"></script>
 <script src="../js/pacientes.js"></script>
+
 </body>
 </html>

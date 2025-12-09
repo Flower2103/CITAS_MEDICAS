@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Citas Médicas</title>
   <link rel="stylesheet" href="css/styles.css">
+
 </head>
 <body>
   <header>
@@ -19,9 +20,11 @@
   </header>
 
   <main>
-    <h1>Menú Principal</h1>
+    <h1>Dashboard - Sistema de Citas Médicas</h1>
+    
+    <button class="btn-actualizar" id="btnActualizar">🔄 Actualizar Estadísticas</button>
 
-    <!-- Estadísticas -->
+    <!-- Estadísticas Principales -->
     <section id="estadisticas">
       <div class="card">
         <h3>Total de Pacientes</h3>
@@ -42,22 +45,67 @@
     </section>
 
     <!-- Citas de Hoy -->
+    <!-- Citas de Hoy - MEJORADA -->
     <section id="citasHoyLista">
       <h2>Citas de Hoy</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Hora</th>
-            <th>Paciente</th>
-            <th>Doctor</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody id="tablaCitasHoy"></tbody>
-      </table>
+      <div class="tabla-citas-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>⏰ Hora</th>
+              <th>👤 Paciente</th>
+              <th>👨‍⚕️ Doctor</th>
+              <th>📋 Estado</th>
+            </tr>
+          </thead>
+          <tbody id="tablaCitasHoy">
+            <tr>
+              <td colspan="4" class="cargando" style="text-align:center; padding: 40px;">
+                Cargando citas...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- GRÁFICAS VISUALES -->
+    <section class="graficas-section">
+      <h2>📊 Estadísticas Visuales</h2>
+      
+      <div class="graficas-grid">
+        <!-- Gráfica 1: Citas por Mes -->
+        <div class="grafica-card">
+          <div class="grafica-container">
+            <canvas id="graficaCitasPorMes"></canvas>
+          </div>
+        </div>
+
+        <!-- Gráfica 2: Especialidades Más Solicitadas -->
+        <div class="grafica-card">
+          <div class="grafica-container">
+            <canvas id="graficaEspecialidades"></canvas>
+          </div>
+        </div>
+
+        <!-- Gráfica 3: Distribución de Estados y Tasa de Cancelación -->
+        <div class="grafica-card">
+          <div class="grafica-container" style="height: 250px;">
+            <canvas id="graficaCancelaciones"></canvas>
+          </div>
+          
+          <div class="tasa-cancelacion">
+            <h4>Tasa de Cancelación</h4>
+            <div class="valor" id="tasaCancelacion">0%</div>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="js/api.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

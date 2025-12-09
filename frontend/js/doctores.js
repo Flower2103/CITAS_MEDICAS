@@ -1,9 +1,8 @@
-// ========== ELEMENTOS HTML ==========
+// ELEMENTOS HTML
 const tabla = document.getElementById("tablaDoctores");
 const buscador = document.getElementById("buscador");
 const btnBuscar = document.getElementById("btnBuscar");
 const btnNuevo = document.getElementById("btnNuevo");
-
 const formulario = document.getElementById("formularioDoctor");
 const formDoctor = document.getElementById("formDoctor");
 const btnCancelar = document.getElementById("btnCancelar");
@@ -11,23 +10,26 @@ const tituloForm = document.getElementById("tituloForm");
 const msgServidor = document.getElementById("msgServidor");
 const filtroEspecialidad = document.getElementById("filtroEspecialidad");
 
-
-
 let listaDoctores = [];
-let listCitas = [];
-let agendaActual = []; // Para filtros de agenda
+let agendaActual = [];
 
-
-// ========== CARGAR DOCTORES ==========
+// ---------- CARGAR DOCTORES----------
 async function cargarDoctores() {
-  const data = await getDoctores();
-  if (!data) return;
-  listaDoctores = data;
-  mostrarDoctores(data);
-  llenarFiltro(data); // Llenar select cada vez que cargamos
+  try {
+    const data = await getDoctores();
+    if (!data) return;
+    
+    listaDoctores = data;
+    mostrarDoctores(data);
+    llenarFiltro(data);
+  } catch (error) {
+    msgServidor.textContent = "Error al cargar doctores";
+    msgServidor.style.color = "red";
+    console.error(error);
+  }
 }
 
-// ========== LLENAR FILTRO ==========
+// -------------LLENAR FILTRO DE ESPECIALIDADES -----------
 function llenarFiltro(doctores) {
   const especialidades = [...new Set(doctores.map(d => d.especialidad))];
   filtroEspecialidad.innerHTML = '<option value="">Todas</option>';
@@ -39,7 +41,7 @@ function llenarFiltro(doctores) {
   });
 }
 
-// ========== FILTRO POR ESPECIALIDAD ==========
+// ----------------FILTRO POR ESPECIALIDAD ---------------
 filtroEspecialidad.addEventListener("change", () => {
   const valor = filtroEspecialidad.value;
   if (!valor) {
@@ -50,13 +52,11 @@ filtroEspecialidad.addEventListener("change", () => {
   }
 });
 
-
-
-// ========== MOSTRAR DOCTORES EN TABLA ==========
+// -------------MOSTRAR DOCTORES EN LA TABLA -----------
 function mostrarDoctores(doctores) {
   tabla.innerHTML = "";
   if (!doctores || doctores.length === 0) {
-    tabla.innerHTML = `<tr><td colspan="7">Sin resultados</td></tr>`;
+    tabla.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 40px;">Sin resultados</td></tr>`;
     return;
   }
 
@@ -69,324 +69,348 @@ function mostrarDoctores(doctores) {
       <td>${d.horarioInicio} - ${d.horarioFin}</td>
       <td>${d.diasDisponibles.join(", ")}</td>
       <td>
-        <button onclick="verAgenda('${d.id}')">Agenda</button>
-        <button onclick="editarDoctor('${d.id}')">Editar</button>
+        <button onclick="verAgenda('${d.id}')" class="btn-actualizar" style="margin: 0.25rem;">📅 Agenda</button>
+        <button onclick="editarDoctor('${d.id}')" class="btn-actualizar" style="margin: 0.25rem;">✏️ Editar</button>
       </td>
     `;
     tabla.appendChild(tr);
   });
 }
 
-// ========== BOTONES Y BUSCADOR ==========
+// ----------BOTÓN BUSCAR ----------------
 btnBuscar.addEventListener("click", () => {
   msgServidor.textContent = "";
   const texto = buscador.value.toLowerCase();
   const filtrados = listaDoctores.filter(d =>
-    d.id.toLowerCase().includes(texto) || d.nombre.toLowerCase().includes(texto)
+    d.id.toLowerCase().includes(texto) || 
+    d.nombre.toLowerCase().includes(texto) ||
+    d.especialidad.toLowerCase().includes(texto)
   );
   mostrarDoctores(filtrados);
 });
 
+// ------------------BOTÓN NUEVO --------------
 btnNuevo.addEventListener("click", () => {
   msgServidor.textContent = "";
   formulario.style.display = "block";
   formDoctor.reset();
   tituloForm.textContent = "Nuevo Doctor";
+  formDoctor.removeAttribute("data-edit-id");
+  
+  // Scroll al formulario
+  formulario.scrollIntoView({ behavior: 'smooth' });
 });
 
-// Cancelar formulario
+// ---------------BOTÓN CANCELAR ----------------
 btnCancelar.addEventListener("click", () => {
   formulario.style.display = "none";
   msgServidor.textContent = "";
+  formDoctor.removeAttribute("data-edit-id");
 });
 
-// ========== EDITAR DOCTOR ==========
+// -------------EDITAR DOCTOR -----------------
 function editarDoctor(id) {
   const doctor = listaDoctores.find(d => d.id === id);
   if (!doctor) return alert("Doctor no encontrado");
 
-  const formSection = document.getElementById("formularioDoctor");
-  const titulo = document.getElementById("tituloForm");
-  const form = document.getElementById("formDoctor");
+  msgServidor.textContent = "";
+  formulario.style.display = "block";
+  tituloForm.textContent = "Editar Doctor";
 
-  formSection.style.display = "block";
-  titulo.textContent = "Editar Doctor";
-
-  form.id.value = doctor.id;
-  form.nombre.value = doctor.nombre;
-  form.especialidad.value = doctor.especialidad;
-  form.horarioInicio.value = doctor.horarioInicio;
-  form.horarioFin.value = doctor.horarioFin;
+  formDoctor.nombre.value = doctor.nombre;
+  formDoctor.especialidad.value = doctor.especialidad;
+  formDoctor.horarioInicio.value = doctor.horarioInicio;
+  formDoctor.horarioFin.value = doctor.horarioFin;
 
   // Marcar los días disponibles
-  const checkboxes = form.querySelectorAll('input[name="dias"]');
+  const checkboxes = formDoctor.querySelectorAll('input[name="dias"]');
   checkboxes.forEach(cb => {
     cb.checked = doctor.diasDisponibles ? doctor.diasDisponibles.includes(cb.value) : false;
   });
 
-  // Guardar id para submit
-  form.setAttribute("data-edit-id", doctor.id);
+  // Guardar ID para el submit
+  formDoctor.setAttribute("data-edit-id", doctor.id);
+  
+  // Scroll al formulario
+  formulario.scrollIntoView({ behavior: 'smooth' });
 }
 
-
-document.getElementById("formDoctor").addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const form = e.target;
-  const id = form.id.value;
-  const nombre = form.nombre.value;
-  const especialidad = form.especialidad.value;
-  const horarioInicio = form.horarioInicio.value;
-  const horarioFin = form.horarioFin.value;
-  const diasDisponibles = Array.from(form.querySelectorAll('input[name="dias"]:checked'))
-                             .map(cb => cb.value);
-
-  const doctorData = { nombre, especialidad, horarioInicio, horarioFin, diasDisponibles };
-
-  try {
-    if (id) {
-      // PUT /doctores/:id
-      const res = await fetch(`/doctores/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(doctorData)
-      });
-      const updated = await res.json();
-      console.log("Doctor actualizado:", updated);
-    } else {
-      // POST /doctores
-      const res = await fetch("/doctores", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(doctorData)
-      });
-      const nuevo = await res.json();
-      console.log("Doctor creado:", nuevo);
-    }
-
-    // Limpiar y recargar tabla
-    form.reset();
-    document.getElementById("formularioDoctor").style.display = "none";
-    cargarDoctores(); // función que refresca la tabla de doctores
-
-  } catch (err) {
-    console.error("Error al guardar doctor:", err);
-  }
-});
-
-
-
-// ========== GESTIONAR AGENDA ==========
-async function verAgenda(doctorId) {
-  try {
-    const tabla = document.getElementById("tablaAgenda");
-    const info = document.getElementById("doctorInfo");
-
-    // Limpiar tabla e info
-    tabla.innerHTML = "";
-    info.innerHTML = "";
-
-    // Traer citas
-    const res = await fetch(`/doctores/${doctorId}/citas`);
-    const citas = await res.json();
-    console.log("Citas:", citas);
-
-    // Traer pacientes
-    const resPac = await fetch("/pacientes");
-    const pacientes = await resPac.json();
-
-    // Traer doctor
-    const resDoc = await fetch(`/doctores/${doctorId}`);
-    const doctor = await resDoc.json();
-
-    // Mostrar info doctor
-    info.textContent = `${doctor.nombre} - ${doctor.especialidad}`;
-
-    // Verificar si hay citas
-    if (!citas || citas.length === 0) {
-      const row = document.createElement("tr");
-      row.innerHTML = `<td colspan="6" style="text-align:center;">No hay citas registradas</td>`;
-      tabla.appendChild(row);
-    } else {
-      // Llenar tabla con citas
-      citas.forEach(c => {
-        const paciente = pacientes.find(p => String(p.id) === String(c.pacienteId));
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${c.fecha}</td>
-          <td>${c.hora}</td>
-          <td>${paciente ? paciente.nombre : "—"}</td>
-          <td>${doctor ? doctor.especialidad : "—"}</td>
-          <td>${c.motivo || "—"}</td>
-          <td>${c.estado || "—"}</td>
-        `;
-        tabla.appendChild(row);
-      });
-    }
-
-    // Mostrar sección
-    document.getElementById("agendaSection").style.display = "block";
-
-  } catch (err) {
-    console.error("Error verAgenda:", err);
-    const tabla = document.getElementById("tablaAgenda");
-    tabla.innerHTML = `<tr><td colspan="6" style="text-align:center;">Error al cargar la agenda</td></tr>`;
-  }
-}
-
-
-function mostrarAgendaTabla(citas) {
-  const tablaAgenda = document.getElementById("tablaAgenda");
-  tablaAgenda.innerHTML = "";
-
-  if (!citas || citas.length === 0) {
-    tablaAgenda.innerHTML = `<tr><td colspan="6">Sin citas registradas</td></tr>`;
-    return;
-  }
-
-  citas.forEach(c => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${c.fecha}</td>
-      <td>${c.hora}</td>
-      <td>${c.pacienteNombre || "—"}</td>
-      <td>${c.especialidad}</td>
-      <td>${c.motivo}</td>
-      <td>${c.estado}</td>
-    `;
-    tablaAgenda.appendChild(tr);
-  });
-}
-
-function filtrarAgenda(estado) {
-  if (!agendaActual) return;
-
-  if (estado === "todas") {
-    mostrarAgendaTabla(agendaActual);
-    return;
-  }
-
-  const filtradas = agendaActual.filter(c => c.estado === estado);
-  mostrarAgendaTabla(filtradas);
-}
-
-function limpiarAgenda() {
-  const agendaSection = document.getElementById("agendaSection");
-  agendaSection.style.display = "none";
-  agendaActual = [];
-  document.getElementById("tablaAgenda").innerHTML = "";
-}
-
-
-// ========== FORMULARIO SUBMIT ==========
-//--------------------
-// BORRAR MENSAJES
-//--------------------
-msgServidor.textContent = "";
-
-btnNuevo.addEventListener("click", () => {
-  msgServidor.textContent = ""; // borra mensaje anterior
-  formulario.style.display = "block";
-  formDoctor.reset();
-  tituloForm.textContent = "Nuevo Doctor";
-  formDoctor.removeAttribute("data-edit-id"); // limpia edición anterior
-});
-
-// Buscar doctores
-btnBuscar.addEventListener("click", () => {
-  msgServidor.textContent = ""; // borra mensaje anterior
-  const texto = buscador.value.toLowerCase();
-  const filtrados = listaDoctores.filter(d =>
-    d.id.toLowerCase().includes(texto) || d.nombre.toLowerCase().includes(texto)
-  );
-  mostrarDoctores(filtrados);
-});
-
-//--------------------
-// FORMULARIOsbmit
-//--------------------
+// ----------FORMULARIO SUBMIT --------------
 formDoctor.addEventListener("submit", async (e) => {
   e.preventDefault();
   msgServidor.textContent = "";
-  msgServidor.style.color = "red"; // mensaje de error por defecto
+  msgServidor.style.color = "red";
+  msgServidor.style.background = "";
+  msgServidor.style.padding = "";
 
   const nombre = formDoctor.nombre.value.trim();
-  const especialidad = formDoctor.especialidad.value;
+  const especialidad = formDoctor.especialidad.value.trim();
   const horarioInicio = formDoctor.horarioInicio.value;
   const horarioFin = formDoctor.horarioFin.value;
   const dias = Array.from(formDoctor.querySelectorAll('input[name="dias"]:checked'))
                      .map(c => c.value);
-
+  
+  // Debug: mostrar todos los valores capturados
+  /*
+  console.log("=== DEBUG FORMULARIO ===");
+  console.log("Nombre:", nombre, "| Vacío?", !nombre);
+  console.log("Especialidad:", especialidad, "| Vacío?", !especialidad);
+  console.log("Horario Inicio:", horarioInicio, "| Vacío?", !horarioInicio);
+  console.log("Horario Fin:", horarioFin, "| Vacío?", !horarioFin);
+  console.log("Días seleccionados:", dias, "| Array vacío?", dias.length === 0);
+  console.log("========================");
+*/
   let valido = true;
 
-  // Validaciones front-end
-  if (!nombre) { msgServidor.textContent = "Ingrese el nombre"; valido = false; }
-  else if (!especialidad) { msgServidor.textContent = "Seleccione especialidad"; valido = false; }
-  else if (dias.length === 0) { msgServidor.textContent = "Seleccione al menos un día"; valido = false; }
-
-  // Validar horario correctamente
-  const [hInicio, mInicio] = horarioInicio.split(":").map(Number);
-  const [hFin, mFin] = horarioFin.split(":").map(Number);
-  const minutosInicio = hInicio * 60 + mInicio;
-  const minutosFin = hFin * 60 + mFin;
-
-  if (minutosInicio >= minutosFin) {
-    msgServidor.textContent = "Horario inicio debe ser menor que horario fin";
+ // Validaciones frontend
+  if (!nombre) { 
+    msgServidor.textContent = "⚠️ Ingrese el nombre del doctor"; 
+    msgServidor.style.background = "#f8d7da";
+    msgServidor.style.padding = "1rem";
+    valido = false; 
+  }
+  else if (!especialidad) { 
+    msgServidor.textContent = "⚠️ Seleccione una especialidad"; 
+    msgServidor.style.background = "#f8d7da";
+    msgServidor.style.padding = "1rem";
+    valido = false; 
+  }
+  else if (!horarioInicio || !horarioFin) {
+    msgServidor.textContent = "⚠️ Debe especificar horario de inicio y fin";
+    msgServidor.style.background = "#f8d7da";
+    msgServidor.style.padding = "1rem";
     valido = false;
   }
+  else if (dias.length === 0) { 
+    msgServidor.textContent = "⚠️ Seleccione al menos un día disponible"; 
+    msgServidor.style.background = "#f8d7da";
+    msgServidor.style.padding = "1rem";
+    valido = false; 
+  }
+  
+  // Validar horario solo si ambos campos tienen valor
+  if (valido && horarioInicio && horarioFin) {
+    const [hInicio, mInicio] = horarioInicio.split(":").map(Number);
+    const [hFin, mFin] = horarioFin.split(":").map(Number);
+    const minutosInicio = hInicio * 60 + mInicio;
+    const minutosFin = hFin * 60 + mFin;
 
-  if (!valido) return; // si hay error, no enviar
+    console.log("Validación de horario:");
+    console.log("  Inicio:", horarioInicio, "→", minutosInicio, "minutos");
+    console.log("  Fin:", horarioFin, "→", minutosFin, "minutos");
+    console.log("  ¿Inicio >= Fin?", minutosInicio >= minutosFin);
+
+    if (minutosInicio >= minutosFin) {
+      msgServidor.textContent = `⚠️ El horario de inicio (${horarioInicio}) debe ser menor que el horario de fin (${horarioFin})`;
+      msgServidor.style.background = "#f8d7da";
+      msgServidor.style.padding = "1rem";
+      valido = false;
+    }
+  }
+
+  if (!valido) {
+    return;
+  }
 
   try {
-    msgServidor.textContent = "Guardando...";
-    msgServidor.style.color = "green";
+    msgServidor.textContent = "⏳ Guardando...";
+    msgServidor.style.color = "#856404";
+    msgServidor.style.background = "#fff3cd";
+    msgServidor.style.padding = "1rem";
 
     const editId = formDoctor.getAttribute("data-edit-id");
-    const doctorData = { nombre, especialidad, horarioInicio, horarioFin, diasDisponibles: dias };
-    let res = null, data = null;
+    
+    // Asegurarse de que diasDisponibles sea un array válido
+    const diasDisponibles = dias.length > 0 ? dias : [];
+    
+    const doctorData = { 
+      nombre: nombre, 
+      especialidad: especialidad, 
+      horarioInicio: horarioInicio, 
+      horarioFin: horarioFin, 
+      diasDisponibles: diasDisponibles 
+    };
+    /*
+    // Log para debug - mostrar exactamente qué se enviará
+    console.log("=== DATOS A ENVIAR AL SERVIDOR ===");
+    console.log(JSON.stringify(doctorData, null, 2));
+    console.log("===================================");
+    */
+
+    // Verificar que todos los campos obligatorios estén presentes
+    if (!doctorData.nombre || !doctorData.especialidad || !doctorData.horarioInicio || 
+        !doctorData.horarioFin || !doctorData.diasDisponibles || doctorData.diasDisponibles.length === 0) {
+      throw new Error("Validación frontend: Faltan datos obligatorios antes de enviar");
+    }
+    
+    let resultado;
 
     if (editId) {
-      res = await fetch(`/doctores/${editId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(doctorData)
-      });
+      // Actualizar doctor existente
+      resultado = await updateDoctor(editId, doctorData);
+      msgServidor.textContent = "✅ Doctor actualizado correctamente";
     } else {
-      res = await fetch("/doctores", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(doctorData)
-      });
+      // Crear nuevo doctor (sin ID, se genera en servidor)
+      resultado = await addDoctor(doctorData);
+      msgServidor.textContent = "✅ Doctor registrado correctamente";
     }
 
-    data = await res.json();
-
-    if (!res.ok) {
-      // mostrar error del backend al usuario
-      msgServidor.textContent = data.error || "Error al guardar doctor";
-      msgServidor.style.color = "red";
-      return; // no cerrar el formulario
-    }
-
-    // Si todo salió bien
-    msgServidor.textContent = editId ? "Cambios guardados ✅" : "Doctor registrado ✅";
+    // Éxito
+    msgServidor.style.color = "#155724";
+    msgServidor.style.background = "#d4edda";
+    msgServidor.style.padding = "1rem";
+    
     formDoctor.reset();
     formDoctor.removeAttribute("data-edit-id");
-    formulario.style.display = "none";
-    cargarDoctores();
+    
+    // Recargar lista de doctores
+    await cargarDoctores();
 
-    setTimeout(() => { msgServidor.textContent = ""; }, 3000);
+    // Ocultar formulario después de 2 segundos
+    setTimeout(() => { 
+      formulario.style.display = "none";
+      msgServidor.textContent = "";
+      msgServidor.style.background = "";
+      msgServidor.style.padding = "";
+    }, 2000);
 
   } catch (error) {
-    msgServidor.textContent = "Error del servidor";
-    msgServidor.style.color = "red";
-    console.error(error);
+    msgServidor.textContent = "❌ " + (error.message || "Error al guardar doctor");
+    msgServidor.style.color = "#721c24";
+    msgServidor.style.background = "#f8d7da";
+    msgServidor.style.padding = "1rem";
+    console.error("Error al guardar doctor:", error);
   }
 });
 
+// ------------VER AGENDA DEL DOCTOR -------------
+async function verAgenda(doctorId) {
+  try {
+    const tablaAgenda = document.getElementById("tablaAgenda");
+    const doctorInfo = document.getElementById("doctorInfo");
+    const agendaSection = document.getElementById("agendaSection");
 
+    tablaAgenda.innerHTML = "<tr><td colspan='6' class='cargando' style='text-align:center; padding: 40px;'>Cargando agenda...</td></tr>";
+    doctorInfo.innerHTML = "Cargando...";
 
-// ========== INICIO ==========
+    // Obtener citas del doctor
+    const citas = await getHistorialDoctor(doctorId);
+
+    // Obtener info del doctor
+    const doctor = await getDoctor(doctorId);
+
+    // Obtener pacientes
+    const pacientes = await getPacientes();
+
+    // Mostrar info del doctor
+    doctorInfo.innerHTML = `
+      <strong>👨‍⚕️ ${doctor.nombre}</strong> | 
+      <span style="color: #667eea;">🏥 ${doctor.especialidad}</span> | 
+      <span>⏰ ${doctor.horarioInicio} - ${doctor.horarioFin}</span> | 
+      <span>📅 ${doctor.diasDisponibles.join(", ")}</span>
+    `;
+
+    // Limpiar tabla
+    tablaAgenda.innerHTML = "";
+
+    if (!citas || citas.length === 0) {
+      tablaAgenda.innerHTML = `
+        <tr>
+          <td colspan="6" class="sin-citas">
+            <div class="sin-citas-texto">No hay citas registradas para este doctor</div>
+          </td>
+        </tr>`;
+    } else {
+      citas.forEach(c => {
+        const paciente = pacientes.find(p => String(p.id) === String(c.pacienteId));
+        const row = document.createElement("tr");
+        
+        // Determinar clase de estado
+        let estadoClass = "";
+        if (c.estado === "programada") estadoClass = "estado-programada";
+        else if (c.estado === "cancelada") estadoClass = "estado-cancelada";
+        else if (c.estado === "completada") estadoClass = "estado-completada";
+        
+        row.innerHTML = `
+          <td>${c.fecha}</td>
+          <td>${c.hora}</td>
+          <td>${paciente ? paciente.nombre : "—"}</td>
+          <td>${doctor.especialidad}</td>
+          <td>${c.motivo || "—"}</td>
+          <td><span class="estado-badge ${estadoClass}">${c.estado || "—"}</span></td>
+        `;
+        tablaAgenda.appendChild(row);
+      });
+    }
+
+    agendaActual = citas;
+    agendaSection.style.display = "block";
+    
+    // Scroll a la sección de agenda
+    agendaSection.scrollIntoView({ behavior: 'smooth' });
+
+  } catch (err) {
+    console.error("Error verAgenda:", err);
+    const tablaAgenda = document.getElementById("tablaAgenda");
+    tablaAgenda.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red; padding: 40px;">❌ Error al cargar la agenda</td></tr>`;
+  }
+}
+
+//----------------FILTRAR AGENDA -----------------
+function filtrarAgenda(estado) {
+  const tablaAgenda = document.getElementById("tablaAgenda");
+  const doctorId = listaDoctores.find(d => agendaActual.some(c => c.doctorId === d.id))?.id;
+  
+  if (!doctorId) return;
+
+  const doctor = listaDoctores.find(d => d.id === doctorId);
+
+  tablaAgenda.innerHTML = "";
+  
+  let citasFiltradas = agendaActual;
+  if (estado !== 'todas') {
+    citasFiltradas = agendaActual.filter(c => c.estado === estado);
+  }
+
+  if (citasFiltradas.length === 0) {
+    tablaAgenda.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 40px;">No hay citas con el estado: ${estado}</td></tr>`;
+    return;
+  }
+
+  citasFiltradas.forEach(c => {
+    getPaciente(c.pacienteId).then(paciente => {
+      const row = document.createElement("tr");
+      
+      let estadoClass = "";
+      if (c.estado === "programada") estadoClass = "estado-programada";
+      else if (c.estado === "cancelada") estadoClass = "estado-cancelada";
+      else if (c.estado === "completada") estadoClass = "estado-completada";
+      
+      row.innerHTML = `
+        <td>${c.fecha}</td>
+        <td>${c.hora}</td>
+        <td>${paciente ? paciente.nombre : "—"}</td>
+        <td>${doctor ? doctor.especialidad : "—"}</td>
+        <td>${c.motivo || "—"}</td>
+        <td><span class="estado-badge ${estadoClass}">${c.estado || "—"}</span></td>
+      `;
+      tablaAgenda.appendChild(row);
+    });
+  });
+}
+
+// -------------LIMPIAR/CERRAR AGENDA --------------
+function limpiarAgenda() {
+  document.getElementById("agendaSection").style.display = "none";
+  agendaActual = [];
+}
+
+// Alias para compatibilidad
+function cerrarAgenda() {
+  limpiarAgenda();
+}
+
+// -----------------INICIO -------------
 document.addEventListener("DOMContentLoaded", () => {
   cargarDoctores();
 });

@@ -2,130 +2,184 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestión de Doctores</title>
   <link rel="stylesheet" href="../css/styles.css">
 </head>
-<body class="fondo-doctores">
+<body>
 
 <header>
-  <h1>Gestión de Doctores</h1>
-  <a class="btn-volver" href="../index.html">← Volver</a>
+  <nav>
+    <ul>
+      <li><a href="../index.html">Inicio</a></li>
+      <li><a href="pacientes.html">Pacientes</a></li>
+      <li><a href="doctores.html">Doctores</a></li>
+      <li><a href="citas.html">Citas</a></li>
+    </ul>
+  </nav>
 </header>
 
-
-
 <main>
+  <h1 style="color: #1e5fb8; margin-bottom: 2rem;">Gestión de Doctores</h1>
 
-  <!-- BUSCADOR Y BOTÓN -->
-  <section>
-    <input type="text" id="buscador" placeholder="Buscar por Nombre o Especialidad">
-    <button id="btnBuscar">Buscar</button>
-    <button id="btnNuevo">Nuevo Doctor</button>
-     <!-- filtrar Especialidad -->
-    <label for="filtroEspecialidad">Filtrar por especialidad:</label>
-    <select id="filtroEspecialidad">
-      <option value="">Todas</option>
-    </select>
+  <!-- BUSCADOR Y BOTONES -->
+  <section style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); margin-bottom: 2rem;">
+    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+      <input type="text" id="buscador" placeholder="🔍 Buscar por Nombre o Especialidad" style="padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; width: 300px; font-size: 14px;">
+      <button id="btnBuscar" class="btn-actualizar">Buscar</button>
+      <button id="btnNuevo" class="btn-actualizar" style="background: #28a745;">+ Nuevo Doctor</button>
+      
+      <label for="filtroEspecialidad" style="margin-left: 1rem; font-weight: 600; color: #333;">Filtrar:</label>
+      <select id="filtroEspecialidad" style="padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; min-width: 200px;">
+        <option value="">Todas las especialidades</option>
+      </select>
+    </div>
   </section>
 
-<!-- TABLA DOCTORES -->
-  <table border="1" width="100%">
-    <thead>
-      <tr>
-        <th>Registro</th>
-        <th>Nombre</th>
-        <th>Especialidad</th>
-        <th>Horario</th>
-        <th>Días Disponibles</th>
-        <th>Acciones</th>
-      </tr>
-    </thead>
-    <tbody id="tablaDoctores"></tbody>
-  </table>
-
+  <!-- TABLA DOCTORES -->
+  <section id="citasHoyLista">
+    <h2>👨‍⚕️ Listado de Doctores</h2>
+    <div class="tabla-citas-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Registro</th>
+            <th>Nombre</th>
+            <th>Especialidad</th>
+            <th>Horario</th>
+            <th>Días Disponibles</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tablaDoctores">
+          <tr>
+            <td colspan="6" class="cargando" style="text-align: center; padding: 40px;">
+              Cargando doctores...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 
   <!-- FORMULARIO DE DOCTOR -->
-  <section id="formularioDoctor" style="display:none; margin-top:30px;">
-    <h2 id="tituloForm">Nuevo Doctor</h2>
-    <form id="formDoctor">
-      <input type="hidden" name="id">
+  <section id="formularioDoctor" style="display:none;" class="graficas-section">
+    <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); max-width: 600px; margin: 0 auto;">
+      <h2 id="tituloForm" style="color: #1e5fb8; margin-bottom: 1.5rem;">Nuevo Doctor</h2>
+      
+      <form id="formDoctor" style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <input type="hidden" name="id">
 
-      <label>
-        Nombre completo:
-        <input type="text" name="nombre" required>
-      </label>
+        <label style="display: flex; flex-direction: column;">
+          <span style="font-weight: 600; color: #333; margin-bottom: 0.5rem;">Nombre completo:</span>
+          <input type="text" name="nombre" required style="padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+        </label>
 
-      <label>
-        Especialidad:
-        <select name="especialidad" required>
-          <option value="">Seleccionar</option>
-          <option value="Cardiología">Cardiología</option>
-          <option value="Pediatría">Pediatría</option>
-          <option value="Dermatología">Dermatología</option>
-          <option value="Ginecología">Ginecología</option>
-          <option value="Odontología">Odontología</option>
-        </select>
-      </label>
+        <label style="display: flex; flex-direction: column;">
+          <span style="font-weight: 600; color: #333; margin-bottom: 0.5rem;">Especialidad:</span>
+          <select name="especialidad" required style="padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+            <option value="">Seleccionar</option>
+            <option value="Cardiología">Cardiología</option>
+            <option value="Pediatría">Pediatría</option>
+            <option value="Dermatología">Dermatología</option>
+            <option value="Ginecología">Ginecología</option>
+            <option value="Odontología">Odontología</option>
+          </select>
+        </label>
 
-      <label>
-        Horario inicio:
-        <input type="time" name="horarioInicio" required>
-      </label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <label style="display: flex; flex-direction: column;">
+            <span style="font-weight: 600; color: #333; margin-bottom: 0.5rem;">Horario inicio:</span>
+            <input type="time" name="horarioInicio" required style="padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+          </label>
 
-      <label>
-        Horario fin:
-        <input type="time" name="horarioFin" required>
-      </label>
+          <label style="display: flex; flex-direction: column;">
+            <span style="font-weight: 600; color: #333; margin-bottom: 0.5rem;">Horario fin:</span>
+            <input type="time" name="horarioFin" required style="padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+          </label>
+        </div>
 
-      <fieldset>
-        <legend>Días disponibles (mínimo 1)</legend>
-        <label><input type="checkbox" name="dias" value="Lunes">Lunes</label>
-        <label><input type="checkbox" name="dias" value="Martes">Martes</label>
-        <label><input type="checkbox" name="dias" value="Miércoles">Miércoles</label>
-        <label><input type="checkbox" name="dias" value="Jueves">Jueves</label>
-        <label><input type="checkbox" name="dias" value="Viernes">Viernes</label>
-        <label><input type="checkbox" name="dias" value="Sábado">Sábado</label>
-        <label><input type="checkbox" name="dias" value="Domingo">Domingo</label>
-      </fieldset>
+        <fieldset style="border: 2px solid #e0e0e0; border-radius: 8px; padding: 1rem;">
+          <legend style="font-weight: 600; color: #333; padding: 0 0.5rem;">📅 Días disponibles (mínimo 1)</legend>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.75rem; margin-top: 0.5rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="dias" value="Lunes" style="width: 18px; height: 18px; cursor: pointer;">
+              <span>Lunes</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="dias" value="Martes" style="width: 18px; height: 18px; cursor: pointer;">
+              <span>Martes</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="dias" value="Miércoles" style="width: 18px; height: 18px; cursor: pointer;">
+              <span>Miércoles</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="dias" value="Jueves" style="width: 18px; height: 18px; cursor: pointer;">
+              <span>Jueves</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="dias" value="Viernes" style="width: 18px; height: 18px; cursor: pointer;">
+              <span>Viernes</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="dias" value="Sábado" style="width: 18px; height: 18px; cursor: pointer;">
+              <span>Sábado</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+              <input type="checkbox" name="dias" value="Domingo" style="width: 18px; height: 18px; cursor: pointer;">
+              <span>Domingo</span>
+            </label>
+          </div>
+        </fieldset>
 
-      <button type="submit">Guardar</button>
-      <button type="button" id="btnCancelar">Cancelar</button>
-       <div id="msgServidor" style="margin-top:10px; color:green;"></div>
-    </form>
+        <div id="msgServidor" style="padding: 1rem; border-radius: 8px; margin-top: 1rem;"></div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+          <button type="submit" class="btn-actualizar" style="flex: 1;">💾 Guardar</button>
+          <button type="button" id="btnCancelar" class="btn-actualizar" style="background: #dc3545;; flex: 1;">✖ Cancelar</button>
+        </div>
+      </form>
+    </div>
   </section>
 
-  <section id="agendaSection" style="display:none; margin-top:30px;">
-  <h2>Agenda de Doctor</h2>
-  <div id="doctorInfo"></div>
+  <!-- AGENDA DEL DOCTOR -->
+  <section id="agendaSection" style="display:none;" class="graficas-section">
+    <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);">
+      <h2 style="color: #1e5fb8; margin-bottom: 1rem;">📅 Agenda del Doctor</h2>
+      <div id="doctorInfo" style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-weight: 500;"></div>
 
-<!--MOSTRAR AGENDA-->>
-  <div>
-    <button onclick="filtrarAgenda('todas')">Todas</button>
-    <button onclick="filtrarAgenda('programada')">Programadas</button>
-    <button onclick="filtrarAgenda('cancelada')">Canceladas</button>
-    <button onclick="filtrarAgenda('completada')">Completadas</button>
-    <button onclick="limpiarAgenda()">Cerrar Agenda</button>
-  </div>
+      <!-- FILTROS -->
+      <div style="margin-bottom: 1.5rem;">
+        <button onclick="filtrarAgenda('todas')" class="btn-actualizar">Todas</button>
+        <button onclick="filtrarAgenda('programada')" class="btn-actualizar">Programadas</button>
+        <button onclick="filtrarAgenda('cancelada')" class="btn-actualizar">Canceladas</button>
+        <button onclick="filtrarAgenda('completada')" class="btn-actualizar">Completadas</button>
+        <button onclick="limpiarAgenda()" class="btn-actualizar" style="background: #dc3545;">Cerrar Agenda</button>
+      </div>
 
-  <table border="1" width="100%">
-    <thead>
-      <tr>
-        <th>Fecha</th>
-        <th>Hora</th>
-        <th>Paciente</th>
-        <th>Especialidad</th>
-        <th>Motivo</th>
-        <th>Estado</th>
-      </tr>
-    </thead>
-    <tbody id="tablaAgenda"></tbody>
-  </table>
-</section>
-
+      <div class="tabla-citas-wrapper">
+        <table style="width: 100%; border-collapse: collapse; background: white;">
+          <thead style="background: #6ca9d8; color: white;">
+            <tr>
+              <th style="padding: 16px 20px; text-align: left;">Fecha</th>
+              <th style="padding: 16px 20px; text-align: left;">Hora</th>
+              <th style="padding: 16px 20px; text-align: left;">Paciente</th>
+              <th style="padding: 16px 20px; text-align: left;">Especialidad</th>
+              <th style="padding: 16px 20px; text-align: left;">Motivo</th>
+              <th style="padding: 16px 20px; text-align: left;">Estado</th>
+            </tr>
+          </thead>
+          <tbody id="tablaAgenda"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 
 </main>
 
 <script src="../js/api.js"></script>
 <script src="../js/doctores.js"></script>
+
 </body>
 </html>

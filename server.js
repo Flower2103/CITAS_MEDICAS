@@ -171,7 +171,9 @@ app.get("/pacientes/:id/historial", async (req, res) => {
 // ------------------ DOCTORES ------------------
 
 // Días válidos
-const DIAS_VALIDOS = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo"];
+const DIAS_VALIDOS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+
+
 
 // POST /doctores - Registrar nuevo doctor
 app.post("/doctores", async (req, res) => {
@@ -179,37 +181,71 @@ app.post("/doctores", async (req, res) => {
     const doctores = await readJSON("./data/doctores.json");
     const nuevo = req.body;
 
-    if (!nuevo.id || !nuevo.nombre || !nuevo.especialidad || !nuevo.horarioInicio || !nuevo.horarioFin || !nuevo.diasDisponibles) {
+    // 🔍 DEBUG: Ver qué llega exactamente
+    console.log("===== DEBUG SERVER.JS =====");
+    console.log("Body recibido:", JSON.stringify(nuevo, null, 2));
+    console.log("nombre:", nuevo.nombre, "| tipo:", typeof nuevo.nombre, "| existe?", !!nuevo.nombre);
+    console.log("especialidad:", nuevo.especialidad, "| tipo:", typeof nuevo.especialidad, "| existe?", !!nuevo.especialidad);
+    console.log("horarioInicio:", nuevo.horarioInicio, "| tipo:", typeof nuevo.horarioInicio, "| existe?", !!nuevo.horarioInicio);
+    console.log("horarioFin:", nuevo.horarioFin, "| tipo:", typeof nuevo.horarioFin, "| existe?", !!nuevo.horarioFin);
+    console.log("diasDisponibles:", nuevo.diasDisponibles, "| tipo:", typeof nuevo.diasDisponibles, "| es array?", Array.isArray(nuevo.diasDisponibles), "| length:", nuevo.diasDisponibles?.length);
+    console.log("===========================");
+
+    // Validar datos obligatorios (sin id, se genera automáticamente)
+    if (!nuevo.nombre || !nuevo.especialidad || !nuevo.horarioInicio || !nuevo.horarioFin || !nuevo.diasDisponibles) {
+      console.log("❌ Validación falló: Faltan datos obligatorios");
       return res.status(400).json({ error: "Faltan datos obligatorios" });
     }
 
-     // Validar que diasDisponibles sea un array no vacío
+    // Validar que diasDisponibles sea un array no vacío
     if (!Array.isArray(nuevo.diasDisponibles) || nuevo.diasDisponibles.length === 0) {
+      console.log("❌ Validación falló: diasDisponibles no es array o está vacío");
       return res.status(400).json({ error: "Debe especificar al menos un día disponible" });
     }
 
     // Validar que todos los días sean válidos
+    const DIAS_VALIDOS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
     const diasInvalidos = nuevo.diasDisponibles.filter(d => !DIAS_VALIDOS.includes(d));
     if (diasInvalidos.length > 0) {
+      console.log("❌ Validación falló: Días inválidos:", diasInvalidos);
       return res.status(400).json({ error: `Días inválidos: ${diasInvalidos.join(", ")}` });
     }
 
+    // Validar duplicado
     if (doctores.some(d => d.nombre === nuevo.nombre && d.especialidad === nuevo.especialidad)) {
+      console.log("❌ Validación falló: Doctor duplicado");
       return res.status(400).json({ error: "Ya existe un doctor con ese nombre y especialidad" });
     }
 
+    // Validar horario
     if (nuevo.horarioInicio >= nuevo.horarioFin) {
+      console.log("❌ Validación falló: Horario inválido");
       return res.status(400).json({ error: "El horario de inicio debe ser menor al fin" });
     }
 
+    // ------------------------------
+    // GENERAR ID AUTOINCREMENTABLE
+    // ------------------------------
+    const ultimoId = doctores.length > 0
+      ? Math.max(...doctores.map(d => parseInt(d.id.replace("D", ""))))
+      : 0;
+
+    nuevo.id = "D" + String(ultimoId + 1).padStart(3, "0");
+    console.log("✅ ID generado:", nuevo.id);
+    // ------------------------------
+
     doctores.push(nuevo);
     await writeJSON("./data/doctores.json", doctores);
+    console.log("✅ Doctor guardado exitosamente");
     res.status(201).json(nuevo);
-  } catch {
+    
+  } catch (err) {
+    console.error("❌ Error en catch:", err);
     res.status(500).json({ error: "Error al registrar doctor" });
   }
-  
 });
+
+
 
 // GET /doctores - Listar todos
 app.get("/doctores", async (req, res) => {
@@ -218,6 +254,17 @@ app.get("/doctores", async (req, res) => {
     res.json(doctores);
   } catch {
     res.status(500).json({ error: "Error al leer doctores" });
+  }
+});
+
+// GET /doctores/especialidad/:esp - Buscar por especialidad
+app.get("/doctores/especialidad/:esp", async (req, res) => {
+  try {
+    const doctores = await readJSON("./data/doctores.json");
+    const filtrados = doctores.filter(d => d.especialidad.toLowerCase() === req.params.esp.toLowerCase());
+    res.json(filtrados);
+  } catch {
+    res.status(500).json({ error: "Error al buscar doctores" });
   }
 });
 
@@ -230,17 +277,6 @@ app.get("/doctores/:id", async (req, res) => {
     res.json(doctor);
   } catch {
     res.status(500).json({ error: "Error al leer doctor" });
-  }
-});
-
-// GET /doctores/especialidad/:esp - Buscar por especialidad
-app.get("/doctores/especialidad/:esp", async (req, res) => {
-  try {
-    const doctores = await readJSON("./data/doctores.json");
-    const filtrados = doctores.filter(d => d.especialidad.toLowerCase() === req.params.esp.toLowerCase());
-    res.json(filtrados);
-  } catch {
-    res.status(500).json({ error: "Error al buscar doctores" });
   }
 });
 
@@ -274,9 +310,70 @@ app.get("/doctores/:id/citas", async (req, res) => {
   }
 });
 
+// PUT /doctores/:id - Actualizar datos de doctor
+app.put("/doctores/:id", async (req, res) => {
+  try {
+    const doctores = await readJSON("./data/doctores.json");
+    const idx = doctores.findIndex(d => d.id === req.params.id);
+    
+    if (idx === -1) {
+      return res.status(404).json({ error: "Doctor no encontrado" });
+    }
+
+    const { id, ...actualizaciones } = req.body; // No permitir cambio de ID
+
+    // Validar diasDisponibles si viene en la actualización
+    if (actualizaciones.diasDisponibles) {
+      if (!Array.isArray(actualizaciones.diasDisponibles) || actualizaciones.diasDisponibles.length === 0) {
+        return res.status(400).json({ error: "Debe especificar al menos un día disponible" });
+      }
+
+      const DIAS_VALIDOS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+      const diasInvalidos = actualizaciones.diasDisponibles.filter(d => !DIAS_VALIDOS.includes(d));
+      if (diasInvalidos.length > 0) {
+        return res.status(400).json({ error: `Días inválidos: ${diasInvalidos.join(", ")}` });
+      }
+    }
+
+    // Validar horario si viene en la actualización
+    const horarioInicio = actualizaciones.horarioInicio || doctores[idx].horarioInicio;
+    const horarioFin = actualizaciones.horarioFin || doctores[idx].horarioFin;
+    
+    if (horarioInicio >= horarioFin) {
+      return res.status(400).json({ error: "El horario de inicio debe ser menor al fin" });
+    }
+
+    // Validar duplicado (solo si cambia nombre o especialidad)
+    if (actualizaciones.nombre || actualizaciones.especialidad) {
+      const nombreFinal = actualizaciones.nombre || doctores[idx].nombre;
+      const especialidadFinal = actualizaciones.especialidad || doctores[idx].especialidad;
+      
+      const duplicado = doctores.find(d => 
+        d.nombre === nombreFinal && 
+        d.especialidad === especialidadFinal && 
+        d.id !== req.params.id
+      );
+      
+      if (duplicado) {
+        return res.status(400).json({ error: "Ya existe un doctor con ese nombre y especialidad" });
+      }
+    }
+
+    // Actualizar doctor
+    doctores[idx] = { ...doctores[idx], ...actualizaciones };
+    await writeJSON("./data/doctores.json", doctores);
+    
+    res.json(doctores[idx]);
+    
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al actualizar doctor" });
+  }
+});
+
+
+
 // ------------------ CITAS ------------------
-
-
 
 // CREAR cita
 app.post("/citas", async (req, res) => {
@@ -308,7 +405,7 @@ app.post("/citas", async (req, res) => {
     if (fechaCita <= ahora) return res.status(400).json({ error: "La fecha y hora deben ser futuras" });
 
     // Validar que el doctor esté disponible ese día
-    const dias = ["Domingo","Lunes","Martes","Miercoles","Jueves","Viernes","Sabado"];
+    const dias = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
     const diaCita = dias[fechaCita.getDay()];
     if (!doctor.diasDisponibles.includes(diaCita)) {
       return res.status(400).json({ error: `El doctor no está disponible el día ${diaCita}` });
@@ -395,7 +492,7 @@ app.get("/doctores/disponibles", async (req, res) => {
     const citas = await readJSON("./data/citas.json");
 
     const fechaCita = new Date(`${fecha}T${hora}`);
-    const dias = ["Domingo","Lunes","Martes","Miercoles","Jueves","Viernes","Sabado"];
+    const dias = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
     const diaCita = dias[fechaCita.getDay()];
 
     const disponibles = doctores.filter(d => {

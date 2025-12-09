@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estadísticas - Sistema de Citas Médicas</title>
+  <link rel="stylesheet" href="styles.css">
+
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📊 Estadísticas Visuales</h1>
+      <button class="btn-actualizar" onclick="actualizarGraficas()">
+        🔄 Actualizar
+      </button>
+    </header>
+
+    <!-- Gráficas -->
+    <div class="graficas-grid">
+      <!-- Gráfica 1: Citas por Mes -->
+      <div class="grafica-card">
+        <div class="grafica-container">
+          <canvas id="graficaCitasPorMes"></canvas>
+        </div>
+      </div>
+
+      <!-- Gráfica 2: Especialidades -->
+      <div class="grafica-card">
+        <div class="grafica-container">
+          <canvas id="graficaEspecialidades"></canvas>
+        </div>
+      </div>
+
+      <!-- Gráfica 3: Cancelaciones -->
+      <div class="grafica-card">
+        <div class="grafica-container-pequena">
+          <canvas id="graficaCancelaciones"></canvas>
+        </div>
+        
+        <!-- Mostrar tasa de cancelación -->
+        <div class="tasa-cancelacion">
+          <h3>Tasa de Cancelación</h3>
+          <div class="valor" id="tasaCancelacion">0%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="api.js"></script>
+  <script src="estadisticas.js"></script>
+</body>
+</html>
