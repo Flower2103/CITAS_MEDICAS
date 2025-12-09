@@ -1,4 +1,4 @@
-const baseURL = "http://localhost:3000"; // tu backend
+const baseURL = "http://localhost:3000"; 
 
 async function fetchJSON(url) {
   const res = await fetch(url);
@@ -74,14 +74,14 @@ function llenarTablaCitasHoy(citasHoy, pacientes, doctores) {
   });
 }
 
-// ========== CARGAR GRÁFICAS ==========
+// ========== CARGAR GRAFICAS ==========
 function cargarGraficas(citas, doctores) {
   crearGraficaCitasPorMes(citas);
   crearGraficaEspecialidades(citas, doctores);
   crearGraficaCancelaciones(citas);
 }
 
-// ========== 1. GRÁFICA DE CITAS POR MES ==========
+// ========== GRAFICA DE CITAS POR MES ==========
 function crearGraficaCitasPorMes(citas) {
   const ctx = document.getElementById('graficaCitasPorMes');
   if (!ctx) return;
@@ -167,7 +167,7 @@ function crearGraficaCitasPorMes(citas) {
   });
 }
 
-// ========== 2. GRÁFICA DE ESPECIALIDADES ==========
+// ========== GRAFICA DE ESPECIALIDADES ==========
 function crearGraficaEspecialidades(citas, doctores) {
   const ctx = document.getElementById('graficaEspecialidades');
   if (!ctx) return;
@@ -259,7 +259,7 @@ function crearGraficaEspecialidades(citas, doctores) {
   });
 }
 
-// ========== 3. GRÁFICA DE CANCELACIONES ==========
+// ========== GRAFICA DE CANCELACIONES ==========
 function crearGraficaCancelaciones(citas) {
   const ctx = document.getElementById('graficaCancelaciones');
   if (!ctx) return;
@@ -349,7 +349,7 @@ function crearGraficaCancelaciones(citas) {
   });
 }
 
-// ========== ACTUALIZAR ESTADÍSTICAS ==========
+// ========== ACTUALIZAR ESTADISTICAS ==========
 function actualizarEstadisticas() {
   cargarEstadisticas();
 }

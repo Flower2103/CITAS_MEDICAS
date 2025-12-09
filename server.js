@@ -4,7 +4,6 @@ const path = require("path");
 const app = express();
 
 
-
 app.use(express.json());
 
 // Servir carpeta frontend
@@ -174,15 +173,15 @@ app.get("/pacientes/:id/historial", async (req, res) => {
 const DIAS_VALIDOS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
 
-
 // POST /doctores - Registrar nuevo doctor
 app.post("/doctores", async (req, res) => {
   try {
     const doctores = await readJSON("./data/doctores.json");
     const nuevo = req.body;
 
-    // 🔍 DEBUG: Ver qué llega exactamente
-    console.log("===== DEBUG SERVER.JS =====");
+    //DEBUG: Ver que llega exactamente
+   /* 
+   console.log("===== DEBUG SERVER.JS =====");
     console.log("Body recibido:", JSON.stringify(nuevo, null, 2));
     console.log("nombre:", nuevo.nombre, "| tipo:", typeof nuevo.nombre, "| existe?", !!nuevo.nombre);
     console.log("especialidad:", nuevo.especialidad, "| tipo:", typeof nuevo.especialidad, "| existe?", !!nuevo.especialidad);
@@ -190,20 +189,21 @@ app.post("/doctores", async (req, res) => {
     console.log("horarioFin:", nuevo.horarioFin, "| tipo:", typeof nuevo.horarioFin, "| existe?", !!nuevo.horarioFin);
     console.log("diasDisponibles:", nuevo.diasDisponibles, "| tipo:", typeof nuevo.diasDisponibles, "| es array?", Array.isArray(nuevo.diasDisponibles), "| length:", nuevo.diasDisponibles?.length);
     console.log("===========================");
+    */
 
-    // Validar datos obligatorios (sin id, se genera automáticamente)
+    //Validar datos obligatorios (sin id, se genera automaticamente)
     if (!nuevo.nombre || !nuevo.especialidad || !nuevo.horarioInicio || !nuevo.horarioFin || !nuevo.diasDisponibles) {
       console.log("❌ Validación falló: Faltan datos obligatorios");
       return res.status(400).json({ error: "Faltan datos obligatorios" });
     }
 
-    // Validar que diasDisponibles sea un array no vacío
+    //Validar que diasDisponibles sea un array no vacio
     if (!Array.isArray(nuevo.diasDisponibles) || nuevo.diasDisponibles.length === 0) {
       console.log("❌ Validación falló: diasDisponibles no es array o está vacío");
       return res.status(400).json({ error: "Debe especificar al menos un día disponible" });
     }
 
-    // Validar que todos los días sean válidos
+    //Validar que todos los días sean validos
     const DIAS_VALIDOS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
     const diasInvalidos = nuevo.diasDisponibles.filter(d => !DIAS_VALIDOS.includes(d));
     if (diasInvalidos.length > 0) {
@@ -211,21 +211,19 @@ app.post("/doctores", async (req, res) => {
       return res.status(400).json({ error: `Días inválidos: ${diasInvalidos.join(", ")}` });
     }
 
-    // Validar duplicado
+    //Validar duplicado
     if (doctores.some(d => d.nombre === nuevo.nombre && d.especialidad === nuevo.especialidad)) {
       console.log("❌ Validación falló: Doctor duplicado");
       return res.status(400).json({ error: "Ya existe un doctor con ese nombre y especialidad" });
     }
 
-    // Validar horario
+    //Validar horario
     if (nuevo.horarioInicio >= nuevo.horarioFin) {
       console.log("❌ Validación falló: Horario inválido");
       return res.status(400).json({ error: "El horario de inicio debe ser menor al fin" });
     }
 
-    // ------------------------------
-    // GENERAR ID AUTOINCREMENTABLE
-    // ------------------------------
+    //ID AUTOINCREMENTABLE
     const ultimoId = doctores.length > 0
       ? Math.max(...doctores.map(d => parseInt(d.id.replace("D", ""))))
       : 0;
@@ -244,7 +242,6 @@ app.post("/doctores", async (req, res) => {
     res.status(500).json({ error: "Error al registrar doctor" });
   }
 });
-
 
 
 // GET /doctores - Listar todos
@@ -371,11 +368,51 @@ app.put("/doctores/:id", async (req, res) => {
   }
 });
 
+//GET - DOCTORES DISONIBLES
+app.get("/doctores/disponibles", async (req, res) => {
+  try {
+    const { fecha, hora } = req.query;
+    if (!fecha || !hora) return res.status(400).json({ error: "Falta fecha u hora" });
+
+    const doctores = await readJSON("./data/doctores.json");
+    const citas = await readJSON("./data/citas.json");
+
+    const dias = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+    const diaCita = dias[new Date(fecha).getDay()];
+
+    const disponibles = doctores.filter(d => {
+      if (!d.diasDisponibles.includes(diaCita)) return false;
+
+      const [hInicio, mInicio] = d.horarioInicio.split(":").map(Number);
+      const [hFin, mFin] = d.horarioFin.split(":").map(Number);
+      const [hCita, mCita] = hora.split(":").map(Number);
+
+      const minutosInicio = hInicio*60 + mInicio;
+      const minutosFin = hFin*60 + mFin;
+      const minutosCita = hCita*60 + mCita;
+
+      if (minutosCita < minutosInicio || minutosCita >= minutosFin) return false;
+
+      const ocupada = citas.some(c => 
+        c.doctorId === d.id &&
+        new Date(c.fecha).toISOString().split("T")[0] === fecha &&
+        c.hora === hora
+      );
+
+      return !ocupada;
+    });
+
+    res.json(disponibles);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al obtener doctores disponibles" });
+  }
+});
 
 
 // ------------------ CITAS ------------------
-
-// CREAR cita
+// POST cita - CREAR
 app.post("/citas", async (req, res) => {
   try {
     const citas = await readJSON("./data/citas.json");
@@ -383,18 +420,37 @@ app.post("/citas", async (req, res) => {
     const doctores = await readJSON("./data/doctores.json");
     const nueva = req.body;
 
+    // --- 1. GENERACIÓN DE ID AUTONUMÉRICO CON RELLENO DE CEROS ---
+    const lastCita = citas[citas.length - 1];
+    let newIdNumber = 1;
+
+    if (lastCita) {
+      // Extrae el número del último ID, asumiendo el formato "CXXX"
+      const lastIdMatch = lastCita.id.match(/C(\d+)/);
+      if (lastIdMatch) {
+          const lastIdNumber = parseInt(lastIdMatch[1]);
+          newIdNumber = lastIdNumber + 1;
+      }
+    }
+    
+    // Rellenar con ceros a la izquierda para mantener el formato "C00X"
+    // Asumimos 3 dígitos de relleno (001, 010, 100)
+    const paddedId = String(newIdNumber).padStart(3, '0');
+    nueva.id = "C" + paddedId; // Asignar el nuevo ID generado (Ej: "C009")
+    // -------------------------------------------------------------
+    
     // Validar campos obligatorios
-    if (!nueva.id || !nueva.pacienteId || !nueva.doctorId || !nueva.fecha || !nueva.hora) {
-      return res.status(400).json({ error: "Faltan datos obligatorios" });
+    if (!nueva.pacienteId || !nueva.doctorId || !nueva.fecha || !nueva.hora) {
+      return res.status(400).json({ error: "Faltan datos obligatorios (pacienteId, doctorId, fecha, hora)" });
     }
 
     // Validar paciente existente
-    if (!pacientes.find(p => p.id === nueva.pacienteId)) {
+    if (!pacientes.find(p => Number(p.id) === Number(nueva.pacienteId))) {
       return res.status(400).json({ error: "El paciente no existe" });
     }
 
     // Validar doctor existente
-    const doctor = doctores.find(d => d.id === nueva.doctorId);
+    const doctor = doctores.find(d => Number(d.id) === Number(nueva.doctorId));
     if (!doctor) {
       return res.status(400).json({ error: "El doctor no existe" });
     }
@@ -411,7 +467,7 @@ app.post("/citas", async (req, res) => {
       return res.status(400).json({ error: `El doctor no está disponible el día ${diaCita}` });
     }
 
-    // Validar hora dentro del horario del doctor
+    // Validar hora dentro del horario del doctor (Lógica de minutos...)
     const [hInicio, mInicio] = doctor.horarioInicio.split(":").map(Number);
     const [hFin, mFin] = doctor.horarioFin.split(":").map(Number);
     const [hCita, mCita] = nueva.hora.split(":").map(Number);
@@ -528,6 +584,7 @@ app.get("/doctores/disponibles", async (req, res) => {
     res.status(500).json({ error: "Error al buscar doctores disponibles" });
   }
 });
+
 // GET /citas/:id
 app.get("/citas/:id", async (req, res) => {
   try {
@@ -540,7 +597,6 @@ app.get("/citas/:id", async (req, res) => {
     res.status(500).json({ error: "Error al leer la cita" });
   }
 });
-
 
 // PUT /citas/:id/cancelar - Cancelar una cita
 app.put("/citas/:id/cancelar", async (req, res) => {
@@ -570,8 +626,7 @@ app.put("/citas/:id/cancelar", async (req, res) => {
 });
 
 
-
-//------------------💡 Funcionalidades --------------------
+//------------------Funcionalidades extras --------------------
 // GET /estadisticas/doctores
 app.get("/estadisticas/doctores", async (req, res) => {
   try {
@@ -636,11 +691,6 @@ app.get("/estadisticas/especialidades", async (req, res) => {
     res.status(500).json({ error: "Error al calcular especialidad más solicitada" });
   }
 });
-
-
-
-
-
 
 
 // ------------------ INICIO DEL SERVIDOR ------------------

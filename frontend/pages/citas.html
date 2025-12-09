@@ -1,33 +1,142 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Citas</title>
-  <link rel="stylesheet" href="../css/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Citas</title>
+    <link rel="stylesheet" href="../css/styles.css"> 
 </head>
+<body>
 
-<body class="fondo-citas">
+<header>
+    <nav>
+        <ul>
+            <li><a href="../index.html">Inicio</a></li>
+            <li><a href="pacientes.html">Pacientes</a></li>
+            <li><a href="doctores.html">Doctores</a></li>
+            <li><a href="citas.html">Citas</a></li>
+        </ul>
+    </nav>
+</header>
 
-  <header>
-    <h1>Citas</h1>
-    <a class="btn-volver" href="../index.html">← Volver</a>
-  </header>
+<main>
+    <h1 style="color: #1e5fb8; margin-bottom: 2rem;">Gestión de Citas</h1>
 
-  <main>
-    <section id="citas-section">
-      <ul id="citas-list"></ul>
-      <form id="citas-form">
-        <select name="pacienteId" required></select>
-        <select name="doctorId" required></select>
-        <input type="date" name="fecha" required>
-        <input type="time" name="hora" required>
-        <button type="submit">Agendar Cita</button>
-      </form>
+    <!-- FILTROS -->
+    <section style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); margin-bottom: 2rem;">
+        <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
+            <button id="btnNuevaCita" class="btn-actualizar" style="background: #28a745;">+ Nueva Cita</button>
+            
+            <label for="filtroFecha" style="font-weight: 600; color: #333;">📅 Fecha:</label>
+            <input type="date" id="filtroFecha" style="padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
+
+            <label for="filtroEstado" style="font-weight: 600; color: #333;">📌 Estado:</label>
+            <select id="filtroEstado" style="padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;"></select>
+
+            <label for="filtroDoctor" style="font-weight: 600; color: #333;">👨‍⚕️ Doctor:</label>
+            <select id="filtroDoctor" style="padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;"></select>
+        </div>
     </section>
-  </main>
 
-  <script src="../js/api.js"></script>
-  <script src="../js/citas.js"></script>
+    <!-- FORMULARIO NUEVA CITA -->
+    <section id="formularioCita" style="display:none;" class="graficas-section">
+        <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); max-width: 700px; margin: 0 auto;">
+            <h2 id="tituloForm" style="color: #1e5fb8; margin-bottom: 1.5rem;">Agendar Nueva Cita</h2>
+            
+            <form id="formCita" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                
+                <!-- Seleccionar paciente -->
+                <label style="display: flex; flex-direction: column;">
+                    <span style="font-weight: 600; color: #333; margin-bottom: 0.5rem;">Paciente:</span>
+                    <select id="selectPacienteForm" name="pacienteId" required style="padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                        <option value="">Seleccione un paciente</option>
+                    </select>
+                </label>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <label style="display: flex; flex-direction: column;">
+                        <span style="font-weight: 600; color: #333; margin-bottom: 0.5rem;">Fecha:</span>
+                        <input type="date" id="inputFecha" name="fecha" required style="padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
+                    </label>
+                    <label style="display: flex; flex-direction: column;">
+                        <span style="font-weight: 600; color: #333; margin-bottom: 0.5rem;">Hora:</span>
+                        <input type="time" id="inputHora" name="hora" required step="3600" style="padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
+                    </label>
+                </div>
+
+                <label style="display: flex; flex-direction: column;">
+                    <span style="font-weight: 600; color: #333; margin-bottom: 0.5rem;">Seleccionar Doctor:</span>
+                    <select id="selectDoctorForm" name="doctorId" required style="padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                        <option value="">Seleccione Fecha y Hora primero</option>
+                    </select>
+                </label>
+
+                <label style="display: flex; flex-direction: column;">
+                    <span style="font-weight: 600; color: #333; margin-bottom: 0.5rem;">Motivo de la Cita (Opcional):</span>
+                    <textarea name="motivo" rows="3" style="padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;"></textarea>
+                </label>
+
+                <div id="msgServidor" style="padding: 1rem; border-radius: 8px; margin-top: 1rem;"></div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button type="submit" class="btn-actualizar" style="flex: 1;">📝 Agendar</button>
+                    <button type="button" id="btnCancelarForm" class="btn-actualizar" style="background: #dc3545;; flex: 1;">✖ Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- TABLA CITAS -->
+    <section id="citasHoyLista" style="margin-top: 3rem;">
+        <h2>📝 Listado de Citas</h2>
+        <div class="tabla-citas-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">ID</th>
+                        <th style="width: 10%;">Fecha</th>
+                        <th style="width: 8%;">Hora</th>
+                        <th style="width: 15%;">Paciente</th>
+                        <th style="width: 15%;">Doctor</th>
+                        <th style="width: 12%;">Especialidad</th>
+                        <th style="width: 20%;">Motivo</th>
+                        <th style="width: 10%;">Estado</th>
+                        <th style="width: 15%;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaCitas">
+                    <tr>
+                        <td colspan="9" class="cargando" style="text-align: center; padding: 40px;">
+                            Cargando citas...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</main>
+
+<script src="../js/api.js"></script>
+<script src="../js/citas.js"></script>
+
+<script>
+    // Llenar select de pacientes al cargar la página
+    document.addEventListener("DOMContentLoaded", async () => {
+        const selectPacienteForm = document.getElementById("selectPacienteForm");
+        try {
+            const pacientes = await getPacientes(); // Función de api.js
+            pacientes.forEach(p => {
+                const option = document.createElement("option");
+                option.value = p.id; // Asegúrate de que coincida con el tipo de ID en el servidor
+                option.textContent = p.nombre;
+                selectPacienteForm.appendChild(option);
+            });
+        } catch (err) {
+            console.error("Error al cargar pacientes:", err);
+        }
+    });
+</script>
+
 </body>
 </html>
