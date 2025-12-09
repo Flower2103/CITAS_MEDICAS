@@ -60,7 +60,7 @@
                     </label>
                     <label style="display: flex; flex-direction: column;">
                         <span style="font-weight: 600; color: #333; margin-bottom: 0.5rem;">Hora:</span>
-                        <input type="time" id="inputHora" name="hora" required step="3600" style="padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
+                        <input type="time" id="inputHora" name="hora" required style="padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
                     </label>
                 </div>
 
@@ -80,7 +80,7 @@
 
                 <div style="display: flex; gap: 1rem; margin-top: 1rem;">
                     <button type="submit" class="btn-actualizar" style="flex: 1;">📝 Agendar</button>
-                    <button type="button" id="btnCancelarForm" class="btn-actualizar" style="background: #dc3545;; flex: 1;">✖ Cancelar</button>
+                    <button type="button" id="btnCancelarForm" class="btn-actualizar" style="background: #dc3545; flex: 1;">✖ Cancelar</button>
                 </div>
             </form>
         </div>
@@ -117,26 +117,10 @@
 
 </main>
 
+<!-- Scripts -->
 <script src="../js/api.js"></script>
 <script src="../js/citas.js"></script>
-
-<script>
-    // Llenar select de pacientes al cargar la página
-    document.addEventListener("DOMContentLoaded", async () => {
-        const selectPacienteForm = document.getElementById("selectPacienteForm");
-        try {
-            const pacientes = await getPacientes(); // Función de api.js
-            pacientes.forEach(p => {
-                const option = document.createElement("option");
-                option.value = p.id; // Asegúrate de que coincida con el tipo de ID en el servidor
-                option.textContent = p.nombre;
-                selectPacienteForm.appendChild(option);
-            });
-        } catch (err) {
-            console.error("Error al cargar pacientes:", err);
-        }
-    });
-</script>
+<!-- ✅ Ya NO necesitamos el script adicional, citas.js maneja todo -->
 
 </body>
 </html>

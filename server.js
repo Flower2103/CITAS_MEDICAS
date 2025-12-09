@@ -410,9 +410,9 @@ app.get("/doctores/disponibles", async (req, res) => {
   }
 });
 
-
 // ------------------ CITAS ------------------
-// POST cita - CREAR
+
+// POST /citas - CREAR
 app.post("/citas", async (req, res) => {
   try {
     const citas = await readJSON("./data/citas.json");
@@ -420,37 +420,31 @@ app.post("/citas", async (req, res) => {
     const doctores = await readJSON("./data/doctores.json");
     const nueva = req.body;
 
-    // --- 1. GENERACIÓN DE ID AUTONUMÉRICO CON RELLENO DE CEROS ---
+    // Generación de ID autonumérico
     const lastCita = citas[citas.length - 1];
     let newIdNumber = 1;
 
     if (lastCita) {
-      // Extrae el número del último ID, asumiendo el formato "CXXX"
       const lastIdMatch = lastCita.id.match(/C(\d+)/);
       if (lastIdMatch) {
-          const lastIdNumber = parseInt(lastIdMatch[1]);
-          newIdNumber = lastIdNumber + 1;
+        newIdNumber = parseInt(lastIdMatch[1]) + 1;
       }
     }
     
-    // Rellenar con ceros a la izquierda para mantener el formato "C00X"
-    // Asumimos 3 dígitos de relleno (001, 010, 100)
-    const paddedId = String(newIdNumber).padStart(3, '0');
-    nueva.id = "C" + paddedId; // Asignar el nuevo ID generado (Ej: "C009")
-    // -------------------------------------------------------------
+    nueva.id = "C" + String(newIdNumber).padStart(3, '0');
     
     // Validar campos obligatorios
     if (!nueva.pacienteId || !nueva.doctorId || !nueva.fecha || !nueva.hora) {
       return res.status(400).json({ error: "Faltan datos obligatorios (pacienteId, doctorId, fecha, hora)" });
     }
 
-    // Validar paciente existente
-    if (!pacientes.find(p => Number(p.id) === Number(nueva.pacienteId))) {
+    // Validar que existan paciente y doctor (comparar como strings)
+    const paciente = pacientes.find(p => String(p.id) === String(nueva.pacienteId));
+    if (!paciente) {
       return res.status(400).json({ error: "El paciente no existe" });
     }
 
-    // Validar doctor existente
-    const doctor = doctores.find(d => Number(d.id) === Number(nueva.doctorId));
+    const doctor = doctores.find(d => String(d.id) === String(nueva.doctorId));
     if (!doctor) {
       return res.status(400).json({ error: "El doctor no existe" });
     }
@@ -458,7 +452,9 @@ app.post("/citas", async (req, res) => {
     // Validar fecha y hora futura
     const fechaCita = new Date(`${nueva.fecha}T${nueva.hora}`);
     const ahora = new Date();
-    if (fechaCita <= ahora) return res.status(400).json({ error: "La fecha y hora deben ser futuras" });
+    if (fechaCita <= ahora) {
+      return res.status(400).json({ error: "La fecha y hora deben ser futuras" });
+    }
 
     // Validar que el doctor esté disponible ese día
     const dias = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
@@ -467,7 +463,7 @@ app.post("/citas", async (req, res) => {
       return res.status(400).json({ error: `El doctor no está disponible el día ${diaCita}` });
     }
 
-    // Validar hora dentro del horario del doctor (Lógica de minutos...)
+    // Validar hora dentro del horario del doctor
     const [hInicio, mInicio] = doctor.horarioInicio.split(":").map(Number);
     const [hFin, mFin] = doctor.horarioFin.split(":").map(Number);
     const [hCita, mCita] = nueva.hora.split(":").map(Number);
@@ -475,29 +471,63 @@ app.post("/citas", async (req, res) => {
     const minutosInicio = hInicio * 60 + mInicio;
     const minutosFin = hFin * 60 + mFin;
     const minutosCita = hCita * 60 + mCita;
+    const duracionCita = 60; // 60 minutos por cita
 
-    if (minutosCita < minutosInicio || minutosCita >= minutosFin) {
-      return res.status(400).json({ error: `La hora debe estar entre ${doctor.horarioInicio} y ${doctor.horarioFin}` });
+    // La cita debe INICIAR dentro del horario Y TERMINAR antes del cierre
+    if (minutosCita < minutosInicio) {
+      return res.status(400).json({ 
+        error: `La cita es demasiado temprano. El doctor inicia a las ${doctor.horarioInicio}` 
+      });
     }
 
-    // Validar disponibilidad: mismo doctor, misma fecha y misma hora
+    if ((minutosCita + duracionCita) > minutosFin) {
+      return res.status(400).json({ 
+        error: `La cita terminaría después del horario. El doctor termina a las ${doctor.horarioFin}` 
+      });
+    }
+
+    // Validar disponibilidad: no debe haber otra cita a la misma hora
     const fechaStr = fechaCita.toISOString().split("T")[0];
-    if (citas.some(c => 
-      c.doctorId === nueva.doctorId &&
-      new Date(c.fecha).toISOString().split("T")[0] === fechaStr &&
-      c.hora === nueva.hora
-    )) {
-      return res.status(400).json({ error: "El doctor ya tiene una cita en esa hora" });
+    
+    // Buscar si hay conflicto con otra cita
+    const conflicto = citas.find(c => {
+      // Solo citas del mismo doctor
+      if (String(c.doctorId) !== String(nueva.doctorId)) return false;
+      
+      // Solo citas programadas (no canceladas)
+      if (c.estado !== "programada") return false;
+      
+      // Solo citas del mismo día
+      const fechaCitaExistente = new Date(c.fecha).toISOString().split("T")[0];
+      if (fechaCitaExistente !== fechaStr) return false;
+
+      // Verificar solapamiento de horarios
+      const [hc, mc] = c.hora.split(":").map(Number);
+      const inicioCitaExistente = hc * 60 + mc;
+      const finCitaExistente = inicioCitaExistente + duracionCita;
+
+      const inicioCitaNueva = minutosCita;
+      const finCitaNueva = minutosCita + duracionCita;
+
+      // Hay conflicto si se solapan
+      return inicioCitaNueva < finCitaExistente && finCitaNueva > inicioCitaExistente;
+    });
+
+    if (conflicto) {
+      return res.status(400).json({ 
+        error: `El doctor ya tiene una cita programada que genera conflicto (Cita #${conflicto.id} a las ${conflicto.hora})` 
+      });
     }
 
     // Guardar cita
     nueva.estado = "programada";
     citas.push(nueva);
     await writeJSON("./data/citas.json", citas);
+    
     res.status(201).json(nueva);
 
   } catch (err) {
-    console.error(err);
+    console.error("Error al crear cita:", err);
     res.status(500).json({ error: "Error al crear cita" });
   }
 });
@@ -518,12 +548,12 @@ app.get("/citas", async (req, res) => {
   }
 });
 
-// GET /citas/proximas
+// GET /citas/proximas - Citas en las próximas 24 horas
 app.get("/citas/proximas", async (req, res) => {
   try {
     const citas = await readJSON("./data/citas.json");
     const ahora = new Date();
-    const fin = new Date(ahora.getTime() + 24 * 60 * 60 * 1000); // 24 horas
+    const fin = new Date(ahora.getTime() + 24 * 60 * 60 * 1000);
 
     const proximas = citas.filter(c => {
       const fechaCita = new Date(`${c.fecha}T${c.hora}`);
@@ -538,59 +568,16 @@ app.get("/citas/proximas", async (req, res) => {
   }
 });
 
-// GET /citas?fecha=YYYY-MM-DD&estado=programada
-app.get("/doctores/disponibles", async (req, res) => {
-  try {
-    const { fecha, hora } = req.query;
-    if (!fecha || !hora) return res.status(400).json({ error: "Falta fecha u hora" });
-
-    const doctores = await readJSON("./data/doctores.json");
-    const citas = await readJSON("./data/citas.json");
-
-    const fechaCita = new Date(`${fecha}T${hora}`);
-    const dias = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
-    const diaCita = dias[fechaCita.getDay()];
-
-    const disponibles = doctores.filter(d => {
-      // Día disponible (normalizado)
-      const diasDoc = d.diasDisponibles.map(x => x.toLowerCase().trim());
-      if (!diasDoc.includes(diaCita.toLowerCase())) return false;
-
-      // Horario disponible
-      const [hInicio, mInicio] = d.horarioInicio.split(":").map(Number);
-      let [hFin, mFin] = d.horarioFin.split(":").map(Number);
-      if (hFin === 24) hFin = 23;  // Ajuste para JS
-      const minutosInicio = hInicio * 60 + mInicio;
-      const minutosFin = hFin * 60 + mFin;
-      const [hCita, mCita] = hora.split(":").map(Number);
-      const minutosCita = hCita * 60 + mCita;
-
-      if (minutosCita < minutosInicio || minutosCita >= minutosFin) return false;
-
-      // Verificar si doctor ya tiene cita
-      const ocupado = citas.some(c => 
-        c.doctorId === d.id &&
-        c.fecha === fecha &&
-        c.hora === hora &&
-        c.estado === "programada"
-      );
-      return !ocupado;
-    });
-
-    res.json(disponibles);
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Error al buscar doctores disponibles" });
-  }
-});
-
-// GET /citas/:id
+// GET /citas/:id - Obtener cita por ID
 app.get("/citas/:id", async (req, res) => {
   try {
     const citas = await readJSON("./data/citas.json");
     const cita = citas.find(c => c.id === req.params.id);
-    if (!cita) return res.status(404).json({ error: "Cita no encontrada" });
+    
+    if (!cita) {
+      return res.status(404).json({ error: "Cita no encontrada" });
+    }
+    
     res.json(cita);
   } catch (err) {
     console.error(err);
@@ -608,12 +595,10 @@ app.put("/citas/:id/cancelar", async (req, res) => {
       return res.status(404).json({ error: "Cita no encontrada" });
     }
 
-    // Solo se pueden cancelar citas programadas
     if (citas[idx].estado !== "programada") {
       return res.status(400).json({ error: "Solo se pueden cancelar citas programadas" });
     }
 
-    // Cambiar estado a cancelada
     citas[idx].estado = "cancelada";
     await writeJSON("./data/citas.json", citas);
 
@@ -625,7 +610,69 @@ app.put("/citas/:id/cancelar", async (req, res) => {
   }
 });
 
+// GET /doctores/disponibles - Buscar doctores disponibles
+app.get("/doctores/disponibles", async (req, res) => {
+  try {
+    const { fecha, hora } = req.query;
+    
+    if (!fecha || !hora) {
+      return res.status(400).json({ error: "Falta fecha u hora" });
+    }
 
+    const doctores = await readJSON("./data/doctores.json");
+    const citas = await readJSON("./data/citas.json");
+
+    const dias = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+    const fechaObj = new Date(fecha + 'T00:00:00');
+    const diaCita = dias[fechaObj.getDay()];
+
+    const [hCita, mCita] = hora.split(":").map(Number);
+    const minutosCita = hCita * 60 + mCita;
+    const duracionCita = 60;
+
+    const disponibles = doctores.filter(d => {
+      // 1. Doctor disponible ese día
+      if (!d.diasDisponibles.includes(diaCita)) return false;
+
+      // 2. Hora dentro del rango del doctor
+      const [hInicio, mInicio] = d.horarioInicio.split(":").map(Number);
+      const [hFin, mFin] = d.horarioFin.split(":").map(Number);
+      const minutosInicio = hInicio * 60 + mInicio;
+      const minutosFin = hFin * 60 + mFin;
+
+      // La cita debe INICIAR dentro del horario Y TERMINAR antes del cierre
+      if (minutosCita < minutosInicio || (minutosCita + duracionCita) > minutosFin) {
+        return false;
+      }
+
+      // 3. Verificar disponibilidad - no debe haber conflictos
+      const ocupado = citas.some(c => {
+        if (String(c.doctorId) !== String(d.id)) return false;
+        if (c.estado !== "programada") return false;
+        
+        const fechaCitaStr = new Date(c.fecha + 'T00:00:00').toISOString().split("T")[0];
+        const fechaBusquedaStr = fechaObj.toISOString().split("T")[0];
+        
+        if (fechaCitaStr !== fechaBusquedaStr) return false;
+
+        const [hc, mc] = c.hora.split(":").map(Number);
+        const inicioCitaExistente = hc * 60 + mc;
+        const finCitaExistente = inicioCitaExistente + duracionCita;
+
+        // Verificar solapamiento
+        return minutosCita < finCitaExistente && (minutosCita + duracionCita) > inicioCitaExistente;
+      });
+
+      return !ocupado;
+    });
+
+    res.json(disponibles);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al buscar doctores disponibles" });
+  }
+});
 //------------------Funcionalidades extras --------------------
 // GET /estadisticas/doctores
 app.get("/estadisticas/doctores", async (req, res) => {

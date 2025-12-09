@@ -15,28 +15,29 @@ const filtroDoctor = document.getElementById("filtroDoctor");
 const inputFecha = document.getElementById("inputFecha");
 const inputHora = document.getElementById("inputHora");
 const selectDoctorForm = document.getElementById("selectDoctorForm");
+const selectPacienteForm = document.getElementById("selectPacienteForm");
 
-// Variables globales para datos (Se llenan al cargar)
+// Variables globales para datos
 let listaCitas = [];
 let listaDoctores = []; 
-let listaPacientes = []; 
+let listaPacientes = [];
 
+// Flag para saber si ya se llenó el select de pacientes
+let selectPacientesLlenado = false;
 
 // ==========================================================
 // 1. CARGA DE DATOS Y RENDERIZADO INICIAL
 // ==========================================================
 
-// ---------- CARGAR DATOS INICIALES (CITAS, DOCTORES, PACIENTES) ----------
 async function cargarCitas() {
     try {
-        // Ejecutar las tres llamadas a la API en paralelo
         const [citasData, doctoresData, pacientesData] = await Promise.all([
             getCitas(),
             getDoctores(),
             getPacientes()
         ]);
 
-        // 1. Citas (Maneja el caso donde el servidor devuelve { mensaje: "No hay citas..." })
+        // 1. Citas
         if (citasData && citasData.mensaje) {
             listaCitas = [];
         } else if (Array.isArray(citasData)) {
@@ -49,27 +50,54 @@ async function cargarCitas() {
         listaDoctores = doctoresData || [];
         listaPacientes = pacientesData || [];
 
-        // Mostrar la tabla y llenar los filtros
+        // Mostrar tabla y filtros
         mostrarCitas(listaCitas);
         llenarFiltros(listaDoctores);
         
+        // ✅ SOLO llenar select de pacientes UNA VEZ
+        if (!selectPacientesLlenado) {
+            llenarSelectPacientes(listaPacientes);
+            selectPacientesLlenado = true;
+        }
+        
     } catch (error) {
         console.error("Error crítico al cargar datos:", error);
-        
-        // Mostrar error visiblemente
         tablaCitas.innerHTML = `<tr><td colspan="9" class="sin-citas">
             ❌ Error al cargar las citas o datos de soporte. Verifique la API.
         </td></tr>`;
     }
 }
 
-// -------------MOSTRAR CITAS EN LA TABLA (Función Única y Consolidada) -----------
+// Llenar select de pacientes (SOLO SE EJECUTA UNA VEZ)
+function llenarSelectPacientes(pacientes) {
+    if (!selectPacienteForm) {
+        console.error("❌ No se encontró el elemento selectPacienteForm");
+        return;
+    }
+
+    selectPacienteForm.innerHTML = '';
+    
+    const optionDefault = document.createElement("option");
+    optionDefault.value = "";
+    optionDefault.textContent = "Seleccione un paciente";
+    selectPacienteForm.appendChild(optionDefault);
+    
+    pacientes.forEach(p => {
+        const option = document.createElement("option");
+        option.value = p.id;
+        option.textContent = p.nombre;
+        selectPacienteForm.appendChild(option);
+    });
+    
+    console.log(`✅ Select de pacientes llenado con ${pacientes.length} pacientes`);
+}
+
+// Mostrar citas en la tabla
 function mostrarCitas(citas) {
-    const tablaCitasElement = document.getElementById("tablaCitas");
-    tablaCitasElement.innerHTML = "";
+    tablaCitas.innerHTML = "";
     
     if (!citas || citas.length === 0) {
-        tablaCitasElement.innerHTML = `
+        tablaCitas.innerHTML = `
             <tr>
                 <td colspan="9" class="sin-citas">
                     <div class="sin-citas-texto">No hay citas registradas con los filtros aplicados.</div>
@@ -78,13 +106,10 @@ function mostrarCitas(citas) {
         return;
     }
 
-    // Iterar y renderizar filas
     citas.forEach(cita => {
-        // Obtener datos del paciente y doctor usando las listas globales
         const paciente = listaPacientes.find(p => String(p.id) === String(cita.pacienteId));
-        const doctor = listaDoctores.find(d => d.id === cita.doctorId);
+        const doctor = listaDoctores.find(d => String(d.id) === String(cita.doctorId));
         
-        // Determinar clase de estado
         let estadoClass = "";
         if (cita.estado === "programada") estadoClass = "estado-programada";
         else if (cita.estado === "cancelada") estadoClass = "estado-cancelada";
@@ -107,18 +132,15 @@ function mostrarCitas(citas) {
                     : ''}
             </td>
         `;
-        tablaCitasElement.appendChild(tr);
+        tablaCitas.appendChild(tr);
     });
 }
-
 
 // ==========================================================
 // 2. FILTROS Y BÚSQUEDA
 // ==========================================================
 
-// -------------LLENAR FILTROS -----------
 function llenarFiltros(doctores) {
-    // 1. Filtro Doctor
     filtroDoctor.innerHTML = '<option value="">Todos</option>';
     doctores.forEach(d => {
         const option = document.createElement("option");
@@ -127,7 +149,6 @@ function llenarFiltros(doctores) {
         filtroDoctor.appendChild(option);
     });
 
-    // 2. Filtro Estado 
     filtroEstado.innerHTML = `
         <option value="">Todos</option>
         <option value="programada">Programada</option>
@@ -135,14 +156,11 @@ function llenarFiltros(doctores) {
         <option value="completada">Completada</option>
     `;
     
-    // 3. Establecer la fecha mínima en el DatePicker a hoy
     const hoy = new Date().toISOString().split('T')[0];
     filtroFecha.min = hoy;
     inputFecha.min = hoy; 
 }
 
-
-// Función principal de filtrado
 function aplicarFiltros() {
     const fechaFiltro = filtroFecha.value;
     const estadoFiltro = filtroEstado.value;
@@ -159,131 +177,166 @@ function aplicarFiltros() {
     }
 
     if (doctorFiltro) {
-        filtrados = filtrados.filter(c => c.doctorId === doctorFiltro);
+        filtrados = filtrados.filter(c => String(c.doctorId) === String(doctorFiltro));
     }
     
     mostrarCitas(filtrados);
 }
 
-// Asignar Event Listeners a los filtros
 filtroFecha.addEventListener("change", aplicarFiltros);
 filtroEstado.addEventListener("change", aplicarFiltros);
 filtroDoctor.addEventListener("change", aplicarFiltros);
-
 
 // ==========================================================
 // 3. FORMULARIO DE CITA (AGENDAR)
 // ==========================================================
 
-// ----------- Mostrar formulario nueva cita ----------
 btnNuevaCita.addEventListener("click", () => {
     msgServidor.textContent = "";
     formulario.style.display = "block";
     formCita.reset();
     tituloForm.textContent = "Agendar Nueva Cita";
     
-    // Inicializar select de doctores
-    selectDoctorForm.innerHTML = '<option value="">Seleccione Fecha y Hora</option>';
-
-    // Scroll al formulario
+    selectDoctorForm.innerHTML = '<option value="">Seleccione Fecha y Hora primero</option>';
     formulario.scrollIntoView({ behavior: 'smooth' });
 });
 
-// ----------- Cancelar formulario ----------
 btnCancelarForm.addEventListener("click", () => {
     formulario.style.display = "none";
     msgServidor.textContent = "";
 });
 
-// ----------- Buscar doctores disponibles al cambiar fecha/hora ----------
-inputFecha.addEventListener("change", buscarDoctoresDisponibles);
-inputHora.addEventListener("change", buscarDoctoresDisponibles);
 // Buscar doctores disponibles para una fecha y hora
-async function buscarDoctoresDisponibles(fecha, hora) {
+async function buscarDoctoresDisponibles() {
+    const fecha = inputFecha.value;
+    const hora = inputHora.value;
+
+    selectDoctorForm.innerHTML = '<option value="">Cargando...</option>';
+
+    if (!fecha || !hora) {
+        selectDoctorForm.innerHTML = '<option value="">Seleccione Fecha y Hora primero</option>';
+        return;
+    }
+
     try {
-        const doctores = await getDoctores();  // Trae todos los doctores
-        const citas = await getCitas();        // Trae todas las citas
+        const doctores = await getDoctores();
+        const citas = await getCitas();
+
+        console.log("=== DEBUG BUSCAR DOCTORES ===");
+        console.log("Fecha:", fecha, "Hora:", hora);
+        console.log("Total doctores:", doctores.length);
+
+        if (!Array.isArray(doctores) || doctores.length === 0) {
+            selectDoctorForm.innerHTML = '<option value="">No hay doctores registrados</option>';
+            return;
+        }
+
+        const citasArray = Array.isArray(citas) ? citas : [];
 
         const dias = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
-        const diaCita = dias[new Date(fecha).getDay()];
+        const fechaObj = new Date(fecha + 'T00:00:00');
+        const diaCita = dias[fechaObj.getDay()];
 
-        // Hora de la cita en minutos
         const [hCita, mCita] = hora.split(":").map(Number);
         const minutosCita = hCita * 60 + mCita;
+        const duracionCita = 60;
 
-        const duracionCita = 60; // Duración de la cita en minutos
+        console.log(`🗓️ Día: ${diaCita}, ⏰ Hora: ${hora} (${minutosCita} minutos)`);
 
         const disponibles = doctores.filter(d => {
-            // 1️⃣ Doctor disponible ese día
-            if (!d.diasDisponibles.includes(diaCita)) return false;
+            if (!d || !d.diasDisponibles || !d.horarioInicio || !d.horarioFin) {
+                console.warn(`⚠️ Doctor ${d?.nombre} no tiene campos completos`);
+                return false;
+            }
 
-            // 2️⃣ Hora dentro del rango del doctor
-            const [hInicio, mInicio] = d.horarioInicio.split(":").map(Number);
-            const [hFin, mFin] = d.horarioFin.split(":").map(Number);
-            const minutosInicio = hInicio * 60 + mInicio;
-            const minutosFin = hFin * 60 + mFin;
+            // 1️⃣ Verificar día
+            if (!Array.isArray(d.diasDisponibles) || !d.diasDisponibles.includes(diaCita)) {
+                console.log(`❌ ${d.nombre}: No trabaja ${diaCita}`);
+                return false;
+            }
 
-            if (minutosCita < minutosInicio || (minutosCita + duracionCita) > minutosFin) return false;
+            // 2️⃣ Verificar horario
+            try {
+                const [hInicio, mInicio] = d.horarioInicio.split(":").map(Number);
+                const [hFin, mFin] = d.horarioFin.split(":").map(Number);
+                const minutosInicio = hInicio * 60 + mInicio;
+                const minutosFin = hFin * 60 + mFin;
+                const citaTermina = minutosCita + duracionCita;
 
-            // 3️⃣ Verificar que el doctor no tenga otra cita que se solape
-            const ocupada = citas.some(c => {
-                if (c.doctorId !== d.id) return false;
-                const fechaCitaExistente = new Date(c.fecha).toISOString().split("T")[0];
-                if (fechaCitaExistente !== fecha) return false;
+                if (minutosCita < minutosInicio) {
+                    console.log(`❌ ${d.nombre}: Muy temprano (inicia ${d.horarioInicio})`);
+                    return false;
+                }
+
+                if (citaTermina > minutosFin) {
+                    console.log(`❌ ${d.nombre}: Terminaría después de ${d.horarioFin}`);
+                    return false;
+                }
+
+                console.log(`✅ ${d.nombre}: Dentro de horario (${d.horarioInicio}-${d.horarioFin})`);
+
+            } catch (error) {
+                console.error(`❌ Error con horario de ${d.nombre}:`, error);
+                return false;
+            }
+
+            // 3️⃣ Verificar conflictos
+            const ocupada = citasArray.some(c => {
+                if (String(c.doctorId) !== String(d.id)) return false;
+                if (c.estado === "cancelada") return false;
+
+                const fechaCitaExistente = new Date(c.fecha + 'T00:00:00').toISOString().split("T")[0];
+                const fechaSeleccionada = new Date(fecha + 'T00:00:00').toISOString().split("T")[0];
+                
+                if (fechaCitaExistente !== fechaSeleccionada) return false;
 
                 const [hc, mc] = c.hora.split(":").map(Number);
                 const inicioCitaExistente = hc * 60 + mc;
                 const finCitaExistente = inicioCitaExistente + duracionCita;
 
-                // Si se solapan las citas
-                return minutosCita < finCitaExistente && (minutosCita + duracionCita) > inicioCitaExistente;
+                const hayConflicto = minutosCita < finCitaExistente && (minutosCita + duracionCita) > inicioCitaExistente;
+                
+                if (hayConflicto) {
+                    console.log(`⚠️ ${d.nombre}: Conflicto con cita #${c.id} (${c.hora})`);
+                }
+                
+                return hayConflicto;
             });
 
-            return !ocupada;
+            if (ocupada) {
+                console.log(`❌ ${d.nombre}: Ya tiene cita`);
+                return false;
+            }
+
+            console.log(`✅ ${d.nombre}: DISPONIBLE`);
+            return true;
         });
 
-        return disponibles;
+        console.log(`📊 ${disponibles.length} de ${doctores.length} doctores disponibles`);
 
-    } catch (err) {
-        console.error("Error al buscar doctores disponibles:", err);
-        throw new Error("Error al buscar doctores disponibles");
-    }
-}
-
-// Llamada al cambiar fecha u hora en el formulario
-document.getElementById("inputFecha").addEventListener("change", actualizarDoctores);
-document.getElementById("inputHora").addEventListener("change", actualizarDoctores);
-
-async function actualizarDoctores() {
-    const fecha = document.getElementById("inputFecha").value;
-    const hora = document.getElementById("inputHora").value;
-    const selectDoctor = document.getElementById("selectDoctorForm");
-
-    // Limpiar select antes de llenar
-    selectDoctor.innerHTML = '<option value="">Seleccione Fecha y Hora primero</option>';
-
-    if (!fecha || !hora) return;
-
-    try {
-        const disponibles = await buscarDoctoresDisponibles(fecha, hora);
         if (disponibles.length === 0) {
-            selectDoctor.innerHTML = '<option value="">No hay doctores disponibles</option>';
+            selectDoctorForm.innerHTML = `<option value="">No hay doctores disponibles para ${diaCita} a las ${hora}</option>`;
             return;
         }
 
+        selectDoctorForm.innerHTML = '<option value="">Seleccione un doctor</option>';
         disponibles.forEach(d => {
             const option = document.createElement("option");
             option.value = d.id;
-            option.textContent = `${d.nombre} (${d.especialidad})`;
-            selectDoctor.appendChild(option);
+            option.textContent = `${d.nombre} - ${d.especialidad} (${d.horarioInicio}-${d.horarioFin})`;
+            selectDoctorForm.appendChild(option);
         });
+
     } catch (err) {
-        console.error(err);
-        selectDoctor.innerHTML = '<option value="">Error al cargar doctores</option>';
+        console.error("❌ Error al buscar doctores:", err);
+        selectDoctorForm.innerHTML = '<option value="">Error al cargar doctores</option>';
     }
 }
 
-// ---------- FORMULARIO SUBMIT (CREAR CITA) --------------
+inputFecha.addEventListener("change", buscarDoctoresDisponibles);
+inputHora.addEventListener("change", buscarDoctoresDisponibles);
+
+// FORMULARIO SUBMIT
 formCita.addEventListener("submit", async (e) => {
     e.preventDefault();
     msgServidor.textContent = "";
@@ -292,11 +345,13 @@ formCita.addEventListener("submit", async (e) => {
     const doctorId = formCita.doctorId.value.trim();
     const fecha = formCita.fecha.value;
     const hora = formCita.hora.value;
-    const motivo = formCita.motivo ? formCita.motivo.value.trim() : null;
+    const motivo = formCita.motivo ? formCita.motivo.value.trim() : "";
     
     if (!pacienteId || !doctorId || !fecha || !hora) {
         msgServidor.textContent = "⚠️ Faltan datos obligatorios"; 
         msgServidor.style.background = "#f8d7da";
+        msgServidor.style.color = "#721c24";
+        msgServidor.style.padding = "1rem";
         return; 
     }
 
@@ -306,25 +361,16 @@ formCita.addEventListener("submit", async (e) => {
         msgServidor.style.background = "#fff3cd";
         msgServidor.style.padding = "1rem";
         
-        // Convertir los IDs a número
-        const citaData = { 
-            pacienteId: Number(pacienteId), 
-            doctorId: Number(doctorId), 
-            fecha, 
-            hora, 
-            motivo,
-        };
-
-        const resultado = await addCita(citaData); // El resultado contiene el ID generado
+        const citaData = { pacienteId, doctorId, fecha, hora, motivo };
+        const resultado = await addCita(citaData);
 
         msgServidor.textContent = `✅ Cita agendada correctamente con ID ${resultado.id}`;
         msgServidor.style.color = "#155724";
         msgServidor.style.background = "#d4edda";
         
         formCita.reset();
-        await cargarCitas(); // Recargar y actualizar la tabla
+        await cargarCitas();
 
-        // Ocultar formulario
         setTimeout(() => { 
             formulario.style.display = "none";
             msgServidor.textContent = "";
@@ -336,39 +382,35 @@ formCita.addEventListener("submit", async (e) => {
         const errorMsg = error.message || "Error al agendar cita";
         msgServidor.textContent = "❌ " + errorMsg;
         msgServidor.style.background = "#f8d7da";
+        msgServidor.style.color = "#721c24";
         console.error("Error al agendar cita:", error);
     }
 });
-
-
-// ... (resto del código de citas.js) ...
 
 // ==========================================================
 // 4. ACCIONES DE CITA
 // ==========================================================
 
-// ----------- VER DETALLES (SIMULACIÓN) ----------
 function verDetallesCita(id) {
     const cita = listaCitas.find(c => c.id === id);
     if (!cita) return alert("Cita no encontrada");
 
     const paciente = listaPacientes.find(p => String(p.id) === String(cita.pacienteId));
-    const doctor = listaDoctores.find(d => d.id === cita.doctorId);
+    const doctor = listaDoctores.find(d => String(d.id) === String(cita.doctorId));
 
     alert(`
-        📋 Detalles de la Cita #${id}
-        ---------------------------------
-        Paciente: ${paciente ? paciente.nombre : 'Desconocido'}
-        Doctor: ${doctor ? doctor.nombre : 'Desconocido'}
-        Especialidad: ${doctor ? doctor.especialidad : '—'}
-        Fecha: ${cita.fecha}
-        Hora: ${cita.hora}
-        Motivo: ${cita.motivo || 'No especificado'}
-        Estado: ${cita.estado.toUpperCase()}
+📋 Detalles de la Cita #${id}
+---------------------------------
+Paciente: ${paciente ? paciente.nombre : 'Desconocido'}
+Doctor: ${doctor ? doctor.nombre : 'Desconocido'}
+Especialidad: ${doctor ? doctor.especialidad : '—'}
+Fecha: ${cita.fecha}
+Hora: ${cita.hora}
+Motivo: ${cita.motivo || 'No especificado'}
+Estado: ${cita.estado.toUpperCase()}
     `);
 }
 
-// ----------- CANCELAR CITA ----------
 function confirmarCancelarCita(id) {
     if (confirm(`¿Está seguro de que desea CANCELAR la cita #${id}? Esta acción no se puede deshacer.`)) {
         cancelarCitaHandler(id);
@@ -377,31 +419,30 @@ function confirmarCancelarCita(id) {
 
 async function cancelarCitaHandler(id) {
     try {
-        // Enviar indicador de cancelación en la tabla
         tablaCitas.innerHTML = `<tr><td colspan="9" class="cargando" style="text-align:center; padding: 40px;">Cancelando cita ${id}...</td></tr>`;
         
-        await cancelarCita(id); // Función de api.js
+        await cancelarCita(id);
 
         msgServidor.textContent = `✅ Cita #${id} ha sido cancelada.`;
-        msgServidor.style.background = "#f8d7da"; // Usamos color de error para la cancelación
+        msgServidor.style.background = "#f8d7da";
         msgServidor.style.color = "#721c24";
+        msgServidor.style.padding = "1rem";
 
-        await cargarCitas(); // Recargar y actualizar la tabla
+        await cargarCitas();
 
-        // Limpiar mensaje
         setTimeout(() => { 
             msgServidor.textContent = "";
             msgServidor.style.background = "";
             msgServidor.style.color = "";
+            msgServidor.style.padding = "";
         }, 3000);
 
     } catch (error) {
         const errorMsg = error.message || "Error al cancelar la cita";
         alert(`Error al cancelar: ${errorMsg}`);
-        await cargarCitas(); // Recargar por si falló la UI
+        await cargarCitas();
     }
 }
-
 
 // ==========================================================
 // INICIALIZACIÓN

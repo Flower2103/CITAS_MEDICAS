@@ -63,5 +63,21 @@
       "Sábado"
     ],
     "id": "D005"
+  },
+  {
+    "nombre": "Joaquín Rodriguez",
+    "especialidad": "Ginecología",
+    "horarioInicio": "12:00",
+    "horarioFin": "23:30",
+    "diasDisponibles": [
+      "Lunes",
+      "Martes",
+      "Miércoles",
+      "Jueves",
+      "Viernes",
+      "Sábado",
+      "Domingo"
+    ],
+    "id": "D006"
   }
 ]
