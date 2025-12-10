@@ -201,12 +201,6 @@ filtroFecha.addEventListener("change", aplicarFiltros);
 filtroEstado.addEventListener("change", aplicarFiltros);
 filtroDoctor.addEventListener("change", aplicarFiltros);
 
-// ✅ Event listener para botón "Ver Todos"
-const btnVerTodos = document.getElementById("btnVerTodos");
-if (btnVerTodos) {
-    btnVerTodos.addEventListener("click", limpiarFiltros);
-}
-
 // ----------- Mostrar formulario nueva cita ----------
 btnNuevaCita.addEventListener("click", () => {
     msgServidor.textContent = "";
