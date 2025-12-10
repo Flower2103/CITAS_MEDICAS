@@ -4,7 +4,7 @@
     "nombre": "Dr. Carlos Méndez",
     "especialidad": "Cardiología",
     "horarioInicio": "09:00",
-    "horarioFin": "13:00",
+    "horarioFin": "14:22",
     "diasDisponibles": [
       "Lunes",
       "Martes",
@@ -79,5 +79,21 @@
       "Domingo"
     ],
     "id": "D006"
+  },
+  {
+    "nombre": "Horacio Arias",
+    "especialidad": "Cardiología",
+    "horarioInicio": "01:00",
+    "horarioFin": "23:30",
+    "diasDisponibles": [
+      "Lunes",
+      "Martes",
+      "Miércoles",
+      "Jueves",
+      "Viernes",
+      "Sábado",
+      "Domingo"
+    ],
+    "id": "D007"
   }
 ]

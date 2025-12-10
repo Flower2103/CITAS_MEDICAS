@@ -26,6 +26,7 @@
     <section style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); margin-bottom: 2rem;">
         <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
             <button id="btnNuevaCita" class="btn-actualizar" style="background: #28a745;">+ Nueva Cita</button>
+            <button id="btnVerTodos" class="btn-actualizar" style="background: #6c757d;">🔄 Ver Todos</button>
             
             <label for="filtroFecha" style="font-weight: 600; color: #333;">📅 Fecha:</label>
             <input type="date" id="filtroFecha" style="padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px;">
@@ -93,7 +94,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 5%;">ID</th>
+                        <th style="width: 5%;">Registro</th>
                         <th style="width: 10%;">Fecha</th>
                         <th style="width: 8%;">Hora</th>
                         <th style="width: 15%;">Paciente</th>
@@ -115,12 +116,74 @@
         </div>
     </section>
 
+    <!-- DETALLE DE CITA -->
+    <section id="verCitaSection" style="display:none;" class="graficas-section">
+        <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);">
+            <h2 style="color: #1e5fb8; margin-bottom: 1rem;">📋 Detalle de la Cita</h2>
+            
+            <!-- INFORMACIÓN RESUMEN -->
+            <div id="citaInfo" style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-weight: 500;"></div>
+
+            <!-- BOTONES -->
+            <div style="margin-bottom: 1.5rem;">
+                <button id="btnCancelarCita" class="btn-actualizar" style="display:none; background: #dc3545;">❌ Cancelar Cita</button>
+                <button id="btnCerrarDetalle" class="btn-actualizar" style="background: #6c757d;">✖ Cerrar</button>
+            </div>
+
+            <h3 style="color: #333; margin-bottom: 1rem;">📅 Información de la Cita</h3>
+            <div class="tabla-citas-wrapper">
+                <table style="width: 100%; border-collapse: collapse; background: white;">
+                    <thead style="background: #6ca9d8; color: white;">
+                        <tr>
+                            <th style="padding: 16px 20px; text-align: left;">Fecha</th>
+                            <th style="padding: 16px 20px; text-align: left;">Hora</th>
+                            <th style="padding: 16px 20px; text-align: left;">Motivo</th>
+                            <th style="padding: 16px 20px; text-align: left;">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaVerCita"></tbody>
+                </table>
+            </div>
+
+            <h3 style="color: #333; margin-top: 2rem; margin-bottom: 1rem;">👤 Información del Paciente</h3>
+            <div class="tabla-citas-wrapper">
+                <table style="width: 100%; border-collapse: collapse; background: white;">
+                    <thead style="background: #6ca9d8; color: white;">
+                        <tr>
+                            <th style="padding: 16px 20px; text-align: left;">Registro</th>
+                            <th style="padding: 16px 20px; text-align: left;">Nombre</th>
+                            <th style="padding: 16px 20px; text-align: left;">Edad</th>
+                            <th style="padding: 16px 20px; text-align: left;">Teléfono</th>
+                            <th style="padding: 16px 20px; text-align: left;">Email</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaVerPaciente"></tbody>
+                </table>
+            </div>
+
+            <h3 style="color: #333; margin-top: 2rem; margin-bottom: 1rem;">👨‍⚕️ Información del Doctor</h3>
+            <div class="tabla-citas-wrapper">
+                <table style="width: 100%; border-collapse: collapse; background: white;">
+                    <thead style="background: #6ca9d8; color: white;">
+                        <tr>
+                            <th style="padding: 16px 20px; text-align: left;">Registro</th>
+                            <th style="padding: 16px 20px; text-align: left;">Nombre</th>
+                            <th style="padding: 16px 20px; text-align: left;">Especialidad</th>
+                            <th style="padding: 16px 20px; text-align: left;">Horario</th>
+                            <th style="padding: 16px 20px; text-align: left;">Días Disponibles</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaVerDoctor"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
 </main>
 
 <!-- Scripts -->
 <script src="../js/api.js"></script>
 <script src="../js/citas.js"></script>
-<!-- ✅ Ya NO necesitamos el script adicional, citas.js maneja todo -->
 
 </body>
 </html>

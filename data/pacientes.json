@@ -54,5 +54,13 @@
     "email": "berta@hotmail.com",
     "id": "P007",
     "fechaRegistro": "2025-12-09"
+  },
+  {
+    "nombre": "Jorge",
+    "edad": 5,
+    "telefono": "1564789456",
+    "email": "JORGE@KASHSH.COM",
+    "id": "P008",
+    "fechaRegistro": "2025-12-10"
   }
 ]

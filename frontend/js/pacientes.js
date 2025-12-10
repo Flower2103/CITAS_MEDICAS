@@ -11,29 +11,19 @@ const msgServidor = document.getElementById("msgServidor");
 
 let listaPacientes = [];
 let listaDoctores = [];
-let historialActual = []; // Para filtros
+let historialActual = [];
 
 // ============================
 // CARGAR DOCTORES
 // ============================
 async function cargarDoctores() {
   try {
-    const resp = await fetch("/data/doctores.json");
-    listaDoctores = await resp.json();
+    listaDoctores = await getDoctores();
   } catch (error) {
     console.error("Error cargando doctores:", error);
   }
 }
-async function getHistorialPaciente(idPaciente) {
-  try {
-    const resp = await fetch("/data/citas.json");
-    const citas = await resp.json();
-    return citas.filter(c => c.pacienteId === idPaciente);
-  } catch (error) {
-    console.error("Error cargando historial:", error);
-    return [];
-  }
-}
+
 // ============================
 // CARGAR PACIENTES
 // ============================
@@ -50,7 +40,7 @@ async function cargarPacientes() {
 function mostrarPacientes(pacientes) {
   tabla.innerHTML = "";
   if (!pacientes || pacientes.length === 0) {
-    tabla.innerHTML = `<tr><td colspan="7">Sin resultados</td></tr>`;
+    tabla.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 40px;">Sin resultados</td></tr>`;
     return;
   }
 
@@ -64,8 +54,8 @@ function mostrarPacientes(pacientes) {
       <td>${p.email}</td>
       <td>${p.fechaRegistro}</td>
       <td>
-        <button onclick="verHistorial('${p.id}')">Historial</button>
-        <button onclick="editarPaciente('${p.id}')">Editar</button>
+        <button onclick="verHistorial('${p.id}')" class="btn-actualizar" style="margin: 0.25rem;">📋 Historial</button>
+        <button onclick="editarPaciente('${p.id}')" class="btn-actualizar" style="margin: 0.25rem;">✏️ Editar</button>
       </td>
     `;
     tabla.appendChild(tr);
@@ -76,6 +66,7 @@ function mostrarPacientes(pacientes) {
 // BOTONES Y BUSCADOR
 // ============================
 btnBuscar.addEventListener("click", () => {
+  msgServidor.textContent = "";
   const texto = buscador.value.toLowerCase();
   const filtrados = listaPacientes.filter(p =>
     p.id.toLowerCase().includes(texto) || p.nombre.toLowerCase().includes(texto)
@@ -84,22 +75,26 @@ btnBuscar.addEventListener("click", () => {
 });
 
 btnNuevo.addEventListener("click", () => {
+  msgServidor.textContent = "";
+  limpiarErrores();
   formulario.style.display = "block";
   formPaciente.reset();
   tituloForm.textContent = "Nuevo Paciente";
-  msgServidor.textContent = "";
+  formPaciente.removeAttribute("data-edit-id");
+  
+  // Scroll al formulario
+  formulario.scrollIntoView({ behavior: 'smooth' });
 });
 
 btnCancelar.addEventListener("click", () => {
   formulario.style.display = "none";
   msgServidor.textContent = "";
+  formPaciente.removeAttribute("data-edit-id");
 });
 
-
 // ============================
-// OBTENER HISTORIAL DE UN PACIENTE
+// VER HISTORIAL DE UN PACIENTE
 // ============================
-
 async function verHistorial(idPaciente) {
   const historialSection = document.getElementById("historialSection");
   const header = document.getElementById("headerPaciente");
@@ -111,18 +106,26 @@ async function verHistorial(idPaciente) {
 
   // Mostrar info del paciente en header
   header.innerHTML = `
-    <strong>${paciente.nombre}</strong><br>
-    Tel: ${paciente.telefono} | Email: ${paciente.email}
+    <strong>👤 ${paciente.nombre}</strong><br>
+    <span style="color: #667eea;">📞 ${paciente.telefono}</span> | 
+    <span style="color: #667eea;">📧 ${paciente.email}</span>
   `;
 
   historialSection.style.display = "block";
-  tablaHist.innerHTML = `<tr><td colspan="6">Cargando...</td></tr>`;
+  tablaHist.innerHTML = `<tr><td colspan="6" class="cargando" style="text-align:center; padding: 40px;">Cargando historial...</td></tr>`;
 
   // Obtener historial desde API
-  const citas = await getHistorialPaciente(idPaciente);
-
-  historialActual = citas; // Guardar para filtros
-  mostrarHistorialTabla(citas);
+  try {
+    const citas = await getHistorialPaciente(idPaciente);
+    historialActual = citas;
+    mostrarHistorialTabla(citas);
+    
+    // Scroll a la sección de historial
+    historialSection.scrollIntoView({ behavior: 'smooth' });
+  } catch (error) {
+    console.error("Error al cargar historial:", error);
+    tablaHist.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red; padding: 40px;">❌ Error al cargar historial</td></tr>`;
+  }
 }
 
 function mostrarHistorialTabla(citas) {
@@ -130,14 +133,25 @@ function mostrarHistorialTabla(citas) {
   tablaHist.innerHTML = "";
 
   if (!citas || citas.length === 0) {
-    tablaHist.innerHTML = `<tr><td colspan="6">Sin citas registradas</td></tr>`;
+    tablaHist.innerHTML = `
+      <tr>
+        <td colspan="6" class="sin-citas">
+          <div class="sin-citas-texto">Sin citas registradas</div>
+        </td>
+      </tr>`;
     return;
   }
 
   citas.forEach(c => {
-    const doctor = listaDoctores.find(d => d.id === c.doctorId);
+    const doctor = listaDoctores.find(d => String(d.id) === String(c.doctorId));
     const nombreDoctor = doctor ? doctor.nombre : "—";
     const especialidad = doctor ? doctor.especialidad : "—";
+
+    // Determinar clase de estado
+    let estadoClass = "";
+    if (c.estado === "programada") estadoClass = "estado-programada";
+    else if (c.estado === "cancelada") estadoClass = "estado-cancelada";
+    else if (c.estado === "completada") estadoClass = "estado-completada";
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -145,8 +159,8 @@ function mostrarHistorialTabla(citas) {
       <td>${c.hora}</td>
       <td>${nombreDoctor}</td>
       <td>${especialidad}</td>
-      <td>${c.motivo}</td>
-      <td>${c.estado}</td>
+      <td>${c.motivo || "—"}</td>
+      <td><span class="estado-badge ${estadoClass}">${c.estado}</span></td>
     `;
     tablaHist.appendChild(tr);
   });
@@ -165,6 +179,7 @@ function filtrarHistorial(estado) {
 }
 
 function limpiarHistorial() {
+  msgServidor.textContent = "";
   const historialSection = document.getElementById("historialSection");
   historialSection.style.display = "none";
   historialActual = [];
@@ -178,6 +193,9 @@ function editarPaciente(idPaciente) {
   const paciente = listaPacientes.find(p => p.id === idPaciente);
   if (!paciente) return alert("Paciente no encontrado");
 
+  msgServidor.textContent = "";
+  limpiarErrores();
+  
   // Mostrar formulario
   formulario.style.display = "block";
   tituloForm.textContent = "Editar Paciente";
@@ -191,18 +209,13 @@ function editarPaciente(idPaciente) {
   // Guardar id para editar
   formPaciente.setAttribute("data-edit-id", paciente.id);
   
+  // Scroll al formulario
+  formulario.scrollIntoView({ behavior: 'smooth' });
 }
 
 // ============================
-// INICIO
+// LIMPIAR ERRORES
 // ============================
-document.addEventListener("DOMContentLoaded", async () => {
-  await cargarDoctores(); // primero doctores
-  await cargarPacientes(); // luego pacientes
-});
-
-
-//--------------------
 function limpiarErrores() {
   document.getElementById("errorNombre").textContent = "";
   document.getElementById("errorEdad").textContent = "";
@@ -210,40 +223,15 @@ function limpiarErrores() {
   document.getElementById("errorEmail").textContent = "";
 }
 
-
-//--------------------------
-// BORRAR MENSAJES
-//---------------------------
-msgServidor.textContent = "";
-
-btnNuevo.addEventListener("click", () => {
-  msgServidor.textContent = ""; // Borra mensaje anterior
-  formulario.style.display = "block";
-  formPaciente.reset();
-  tituloForm.textContent = "Nuevo Paciente";
-});
-
-btnBuscar.addEventListener("click", () => {
-  msgServidor.textContent = ""; // Borra mensaje anterior
-  const texto = buscador.value.toLowerCase();
-  const filtrados = listaPacientes.filter(p =>
-    p.id.toLowerCase().includes(texto) || p.nombre.toLowerCase().includes(texto)
-  );
-  mostrarPacientes(filtrados);
-});
-
-function limpiarHistorial() {
-  msgServidor.textContent = ""; // Borra mensaje al cerrar historial
-  const historialSection = document.getElementById("historialSection");
-  historialSection.style.display = "none";
-  historialActual = [];
-  document.getElementById("tablaHistorial").innerHTML = "";
-}
-
+// ============================
+// FORMULARIO SUBMIT
+// ============================
 formPaciente.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   limpiarErrores();
+  msgServidor.textContent = "";
+  
   let valido = true;
   const nombre = formPaciente.nombre.value.trim();
   const edad = Number(formPaciente.edad.value);
@@ -251,46 +239,85 @@ formPaciente.addEventListener("submit", async (e) => {
   const email = formPaciente.email.value.trim();
 
   // Validaciones
-  if (!nombre) { document.getElementById("errorNombre").textContent = "Ingrese el nombre"; valido = false; }
-  if (!edad || edad <= 0) { document.getElementById("errorEdad").textContent = "Edad inválida"; valido = false; }
-  if (!telefono) { document.getElementById("errorTelefono").textContent = "Ingrese un teléfono"; valido = false; }
-  else if (telefono.length < 10) { document.getElementById("errorTelefono").textContent = "Mínimo 10 dígitos"; valido = false; }
-  if (!email) { document.getElementById("errorEmail").textContent = "Ingrese un correo"; valido = false; }
-  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { document.getElementById("errorEmail").textContent = "Correo inválido"; valido = false; }
+  if (!nombre) { 
+    document.getElementById("errorNombre").textContent = "Ingrese el nombre"; 
+    valido = false; 
+  }
+  
+  if (!edad || edad <= 0) { 
+    document.getElementById("errorEdad").textContent = "Edad inválida"; 
+    valido = false; 
+  }
+  
+  if (!telefono) { 
+    document.getElementById("errorTelefono").textContent = "Ingrese un teléfono"; 
+    valido = false; 
+  } else if (telefono.length < 10) { 
+    document.getElementById("errorTelefono").textContent = "Mínimo 10 dígitos"; 
+    valido = false; 
+  }
+  
+  if (!email) { 
+    document.getElementById("errorEmail").textContent = "Ingrese un correo"; 
+    valido = false; 
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { 
+    document.getElementById("errorEmail").textContent = "Correo inválido"; 
+    valido = false; 
+  }
 
   if (!valido) return;
 
-  const editId = formPaciente.getAttribute("data-edit-id"); // clave
-  const url = editId ? `/pacientes/${editId}` : "/pacientes";
-  const method = editId ? "PUT" : "POST";
+  const editId = formPaciente.getAttribute("data-edit-id");
 
   try {
-    const resp = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nombre, edad, telefono, email })
-    });
-    const data = await resp.json();
+    msgServidor.textContent = "⏳ Guardando...";
+    msgServidor.style.color = "#856404";
+    msgServidor.style.background = "#fff3cd";
+    msgServidor.style.padding = "1rem";
 
-    if (!resp.ok) {
-      msgServidor.textContent = data.error || "Error al guardar";
-      msgServidor.style.color = "red";
-      return;
+    let resultado;
+    
+    if (editId) {
+      // Actualizar paciente existente
+      resultado = await updatePaciente(editId, { nombre, edad, telefono, email });
+      msgServidor.textContent = "✅ Paciente actualizado correctamente";
+    } else {
+      // Crear nuevo paciente
+      resultado = await addPaciente({ nombre, edad, telefono, email });
+      msgServidor.textContent = "✅ Paciente registrado correctamente";
     }
 
-    msgServidor.textContent = editId ? "Cambios guardados exitosamente ✅" : "Paciente registrado correctamente ✅";
-    msgServidor.style.color = "green";
+    // Éxito
+    msgServidor.style.color = "#155724";
+    msgServidor.style.background = "#d4edda";
+    msgServidor.style.padding = "1rem";
 
-    formulario.style.display = "none";
     formPaciente.reset();
-    formPaciente.removeAttribute("data-edit-id"); // importante limpiar
-    cargarPacientes();
+    formPaciente.removeAttribute("data-edit-id");
+    
+    await cargarPacientes();
 
-    setTimeout(() => { msgServidor.textContent = ""; }, 3000);
+    // Ocultar formulario después de 2 segundos
+    setTimeout(() => {
+      formulario.style.display = "none";
+      msgServidor.textContent = "";
+      msgServidor.style.background = "";
+      msgServidor.style.padding = "";
+    }, 2000);
 
   } catch (error) {
-    msgServidor.textContent = "Error del servidor";
-    msgServidor.style.color = "red";
-    console.error(error);
+    msgServidor.textContent = "❌ " + (error.message || "Error al guardar paciente");
+    msgServidor.style.color = "#721c24";
+    msgServidor.style.background = "#f8d7da";
+    msgServidor.style.padding = "1rem";
+    console.error("Error al guardar paciente:", error);
   }
+});
+
+// ============================
+// INICIO
+// ============================
+document.addEventListener("DOMContentLoaded", async () => {
+  await cargarDoctores();
+  await cargarPacientes();
 });

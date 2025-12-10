@@ -15,7 +15,7 @@
     "fecha": "2025-11-15",
     "hora": "11:00",
     "motivo": "Revisión general",
-    "estado": "programada"
+    "estado": "cancelada"
   },
   {
     "id": "C003",
@@ -69,6 +69,69 @@
     "fecha": "2025-12-04",
     "hora": "20:00",
     "motivo": "Revisión general",
+    "estado": "programada"
+  },
+  {
+    "pacienteId": "P002",
+    "doctorId": "D003",
+    "fecha": "2025-12-10",
+    "hora": "11:00",
+    "motivo": "DOLOR",
+    "id": "C009",
+    "estado": "programada"
+  },
+  {
+    "pacienteId": "P005",
+    "doctorId": "D006",
+    "fecha": "2025-12-10",
+    "hora": "20:03",
+    "motivo": "Embarazo",
+    "id": "C010",
+    "estado": "programada"
+  },
+  {
+    "pacienteId": "P006",
+    "doctorId": "D007",
+    "fecha": "2025-12-25",
+    "hora": "19:18",
+    "motivo": "DOLOR",
+    "id": "C011",
+    "estado": "programada"
+  },
+  {
+    "pacienteId": "P003",
+    "doctorId": "D007",
+    "fecha": "2025-12-10",
+    "hora": "12:00",
+    "motivo": "Malestar",
+    "id": "C012",
+    "estado": "programada"
+  },
+  {
+    "pacienteId": "P004",
+    "doctorId": "D005",
+    "fecha": "2025-12-10",
+    "hora": "09:00",
+    "motivo": "Dolor",
+    "id": "C013",
+    "estado": "cancelada"
+  },
+  {
+    "pacienteId": "P002",
+    "doctorId": "D007",
+    "fecha": "2025-12-10",
+    "hora": "20:00",
+    "motivo": "Malestar",
+    "id": "C014",
+    "estado": "programada"
+  },
+  {
+    "pacienteId": "P004",
+    "doctorId": "D007",
+    "fecha": "2025-12-09",
+    "hora": "22:00",
+    "motivo": "Malestar",
+    "id": "C015",
     "estado": "programada"
   }
 ]
