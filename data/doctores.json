@@ -27,7 +27,7 @@
   },
   {
     "id": "D003",
-    "nombre": "Dr. Juan Pérez",
+    "nombre": "Dr. Juan Pérez Sanchez",
     "especialidad": "Pediatría",
     "horarioInicio": "09:00",
     "horarioFin": "12:00",
@@ -111,5 +111,15 @@
       "Domingo"
     ],
     "id": "D008"
+  },
+  {
+    "nombre": "Mauricio Sevilla",
+    "especialidad": "Dermatología",
+    "horarioInicio": "01:00",
+    "horarioFin": "11:00",
+    "diasDisponibles": [
+      "Martes"
+    ],
+    "id": "D009"
   }
 ]

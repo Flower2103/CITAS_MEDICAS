@@ -9,7 +9,7 @@
   },
   {
     "id": "P002",
-    "nombre": "Laura Meza",
+    "nombre": "Laura Meza Joa",
     "edad": 60,
     "telefono": "55501887445",
     "email": "maria@email.com",
@@ -77,6 +77,14 @@
     "telefono": "1234567892",
     "email": "alan@hotmail.com",
     "id": "P010",
+    "fechaRegistro": "2025-12-10"
+  },
+  {
+    "nombre": "Rufino Díaz",
+    "edad": 50,
+    "telefono": "1234567897",
+    "email": "ruff@hotmail.com",
+    "id": "P011",
     "fechaRegistro": "2025-12-10"
   }
 ]

@@ -24,7 +24,7 @@
     "hora": "11:00",
     "motivo": "DOLOR",
     "id": "C009",
-    "estado": "programada"
+    "estado": "cancelada"
   },
   {
     "pacienteId": "P005",
