@@ -62,5 +62,21 @@
     "email": "JORGE@KASHSH.COM",
     "id": "P008",
     "fechaRegistro": "2025-12-10"
+  },
+  {
+    "nombre": "Edgar Medina",
+    "edad": 34,
+    "telefono": "1234567891",
+    "email": "edgar@hotmail.com",
+    "id": "P009",
+    "fechaRegistro": "2025-12-10"
+  },
+  {
+    "nombre": "Alan Arias",
+    "edad": 1,
+    "telefono": "1234567892",
+    "email": "alan@hotmail.com",
+    "id": "P010",
+    "fechaRegistro": "2025-12-10"
   }
 ]

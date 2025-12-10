@@ -1,7 +1,7 @@
 [
   {
     "id": "D001",
-    "nombre": "Dr. Carlos Méndez",
+    "nombre": "Carlos Méndez",
     "especialidad": "Cardiología",
     "horarioInicio": "09:00",
     "horarioFin": "14:22",
@@ -95,5 +95,21 @@
       "Domingo"
     ],
     "id": "D007"
+  },
+  {
+    "nombre": "Erick Sainz",
+    "especialidad": "Dermatología",
+    "horarioInicio": "03:00",
+    "horarioFin": "13:00",
+    "diasDisponibles": [
+      "Lunes",
+      "Martes",
+      "Miércoles",
+      "Jueves",
+      "Viernes",
+      "Sábado",
+      "Domingo"
+    ],
+    "id": "D008"
   }
 ]

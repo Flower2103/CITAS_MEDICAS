@@ -178,6 +178,19 @@
         </div>
     </section>
 
+  <!-- MODAL DE CONFIRMACIÓN PARA CANCELAR CITA -->
+  <div id="modalCancelar" class="modal" style="display: none;">
+    <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); max-width: 400px; text-align: center;">
+      <h3 style="color: #dc3545; margin-bottom: 1rem;">⚠️ Cancelar Cita</h3>
+      <p id="mensajeCancelar" style="color: #333; margin-bottom: 2rem; font-size: 16px;"></p>
+      
+      <div style="display: flex; gap: 1rem; justify-content: center;">
+        <button id="btnConfirmarCancelar" class="btn-actualizar" style="background: #dc3545; flex: 1;">✓ Sí, Cancelar</button>
+        <button id="btnCerrarModal" class="btn-actualizar" style="background: #6c757d; flex: 1;">✗ No</button>
+      </div>
+    </div>
+  </div>
+
 </main>
 
 <!-- Scripts -->

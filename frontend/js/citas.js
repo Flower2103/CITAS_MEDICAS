@@ -137,7 +137,7 @@ function llenarFiltros(doctores) {
         <option value="completada">Completada</option>
     `;
 
-    // ✅ FECHA MÍNIMA CORREGIDA (hora local)
+    // FECHA MÍNIMA 
     const hoy = new Date();
     const fechaHoyLocal = hoy.getFullYear() + "-" +
         String(hoy.getMonth() + 1).padStart(2, "0") + "-" +
@@ -171,7 +171,7 @@ function aplicarFiltros() {
     mostrarCitas(filtrados);
 }
 
-// ✅ FUNCIÓN: Limpiar filtros y mostrar todas las citas
+// Limpiar filtros y mostrar todas las citas
 function limpiarFiltros() {
     filtroFecha.value = "";
     filtroEstado.value = "";
@@ -179,20 +179,31 @@ function limpiarFiltros() {
     mostrarCitas(listaCitas);
 }
 
-// ✅ EVENT DELEGATION para botones de la tabla
+// para botones de la tabla
 document.addEventListener('click', function(e) {
     const target = e.target;
     
     // Botón VER
     if (target.dataset.action === 'ver') {
         const citaId = target.dataset.id;
-        verDetallesCita(citaId);
+        console.log("Click en botón VER, ID:", citaId);
+        if (citaId) {
+            verDetallesCita(citaId);
+        } else {
+            console.error("Error: No se pudo obtener el ID de la cita del botón VER");
+        }
     }
     
-    // Botón CANCELAR
+    // Boton CANCELAR
     if (target.dataset.action === 'cancelar') {
         const citaId = target.dataset.id;
-        confirmarCancelarCita(citaId);
+        console.log("Click en botón CANCELAR, ID:", citaId, "Tipo:", typeof citaId);
+        if (citaId) {
+            confirmarCancelarCita(citaId);
+        } else {
+            console.error("Error: No se pudo obtener el ID de la cita del botón CANCELAR");
+            alert("Error: No se pudo identificar la cita a cancelar");
+        }
     }
 });
 
@@ -224,7 +235,7 @@ btnCancelarForm.addEventListener("click", () => {
     msgServidor.textContent = "";
 });
 
-// ✅ FUNCIÓN: Convertir input de hora a select con opciones cada hora
+//  Convertir input de hora a select con opciones cada hora
 function reemplazarInputHoraPorSelect() {
     const inputHora = document.getElementById("inputHora");
     
@@ -243,7 +254,7 @@ function reemplazarInputHoraPorSelect() {
     selectHora.style.border = '2px solid #e0e0e0';
     selectHora.style.borderRadius = '8px';
     
-    // Agregar opción por defecto
+    // Agregar opcion por defecto
     const optionDefault = document.createElement('option');
     optionDefault.value = '';
     optionDefault.textContent = 'Seleccione una hora';
@@ -282,21 +293,21 @@ async function buscarDoctoresDisponibles(fecha, hora) {
         const duracionCita = 60;
 
         const disponibles = doctores.filter(d => {
-            // 1️⃣ Doctor disponible ese día
+            // Doctor disponible ese dia
             if (!d.diasDisponibles.includes(diaCita)) return false;
 
-            // 2️⃣ Hora dentro del rango del doctor
+            // Hora dentro del rango del doctor
             const [hInicio, mInicio] = d.horarioInicio.split(":").map(Number);
             const [hFin, mFin] = d.horarioFin.split(":").map(Number);
             const minutosInicio = hInicio * 60 + mInicio;
             const minutosFin = hFin * 60 + mFin;
 
-            // ✅ VALIDACIÓN CORRECTA: La cita debe INICIAR y TERMINAR dentro del horario
+            // VALIDACIÓN CORRECTA: La cita debe INICIAR y TERMINAR dentro del horario
             if (minutosCita < minutosInicio || (minutosCita + duracionCita) > minutosFin) {
                 return false;
             }
 
-            // 3️⃣ Verificar que el doctor no tenga otra cita que se solape
+            // Verificar que el doctor no tenga otra cita que se solape
             const ocupada = citasArray.some(c => {
                 if (String(c.doctorId) !== String(d.id)) return false;
                 if (c.estado !== "programada") return false;
@@ -368,7 +379,7 @@ async function actualizarDoctores() {
             selectDoctor.appendChild(option);
         });
         
-        // Mensaje de éxito
+        // Mensaje de exito
         msgServidor.textContent = `✅ ${disponibles.length} doctor(es) disponible(s)`;
         msgServidor.style.background = "#d4edda";
         msgServidor.style.color = "#155724";
@@ -387,7 +398,7 @@ async function actualizarDoctores() {
 // Event listeners para fecha
 inputFecha.addEventListener("change", actualizarDoctores);
 
-// ---------- FORMULARIO SUBMIT (CREAR CITA) --------------
+// ---------- FORMULARIO SUBMIT --------------
 formCita.addEventListener("submit", async (e) => {
     e.preventDefault();
     msgServidor.textContent = "";
@@ -413,7 +424,7 @@ formCita.addEventListener("submit", async (e) => {
         msgServidor.style.background = "#fff3cd";
         msgServidor.style.padding = "1rem";
         
-        // Enviar IDs como strings, no números
+        // Enviar IDs como strings
         const citaData = { 
             pacienteId,  // String como "P001"
             doctorId,    // String como "D001"
@@ -499,10 +510,8 @@ function verDetallesCita(id) {
     if (cita.estado === "programada") {
         btnCancelar.style.display = "inline-block";
         btnCancelar.onclick = () => {
-            if (confirm("¿Está seguro de cancelar esta cita?")) {
-                cancelarCitaHandler(cita.id);
-                cerrarVerCita();
-            }
+            confirmarCancelarCita(cita.id);
+            cerrarVerCita();
         };
     } else {
         btnCancelar.style.display = "none";
@@ -518,7 +527,7 @@ function cerrarVerCita() {
     document.getElementById("verCitaSection").style.display = "none";
 }
 
-// ✅ Event listener para botón "Cerrar" del detalle
+//  Event listener para botón "Cerrar" del detalle
 const btnCerrarDetalle = document.getElementById("btnCerrarDetalle");
 if (btnCerrarDetalle) {
     btnCerrarDetalle.addEventListener("click", cerrarVerCita);
@@ -527,23 +536,144 @@ if (btnCerrarDetalle) {
 
 
 // ----------- CANCELAR CITA ----------
+let citaIdParaCancelar = null;
+
 function confirmarCancelarCita(id) {
-    if (confirm(`¿Está seguro de que desea CANCELAR la cita #${id}? Esta acción no se puede deshacer.`)) {
-        cancelarCitaHandler(id);
+    console.log("confirmarCancelarCita llamada con ID:", id, "Tipo:", typeof id);
+    
+    if (!id) {
+        console.error("Error: ID es null, undefined o vacío");
+        alert("Error: No se pudo identificar la cita a cancelar");
+        return;
     }
+    
+    // Guardar el ID de la cita a cancelar
+    citaIdParaCancelar = id;
+    console.log("citaIdParaCancelar guardado:", citaIdParaCancelar);
+    
+    // Actualizar mensaje del modal
+    const mensajeCancelar = document.getElementById("mensajeCancelar");
+    mensajeCancelar.textContent = `¿Está seguro de que desea CANCELAR la cita #${id}?`;
+    
+    // Mostrar modal
+    const modal = document.getElementById("modalCancelar");
+    modal.style.display = "flex";
+    console.log("Modal mostrado");
+}
+
+// Event listeners para los botones del modal
+const btnConfirmarCancelar = document.getElementById("btnConfirmarCancelar");
+const btnCerrarModal = document.getElementById("btnCerrarModal");
+
+if (btnConfirmarCancelar) {
+    btnConfirmarCancelar.addEventListener("click", () => {
+        if (citaIdParaCancelar) {
+            const idAGuardar = citaIdParaCancelar; // Guardar el ID antes de cerrarlo
+            cerrarModal();
+            citaIdParaCancelar = null; // Resetear despues de guardar
+            cancelarCitaHandler(idAGuardar); // Usar el ID guardado
+        }
+    });
+}
+
+if (btnCerrarModal) {
+    btnCerrarModal.addEventListener("click", cerrarModal);
+}
+
+// Cerrar modal al hacer click fuera de el
+const modal = document.getElementById("modalCancelar");
+if (modal) {
+    modal.addEventListener("click", (e) => {
+        if (e.target === modal) {
+            cerrarModal();
+        }
+    });
+}
+
+function cerrarModal() {
+    const modal = document.getElementById("modalCancelar");
+    modal.style.display = "none";
+    citaIdParaCancelar = null;
 }
 
 async function cancelarCitaHandler(id) {
     try {
+        console.log("=== INTENTANDO CANCELAR CITA ===");
+        console.log("ID recibido:", id);
+        console.log("Tipo de ID:", typeof id);
+        console.log("Longitud del ID:", id ? id.length : "null/undefined");
+        console.log("ID en formato ASCII:", id ? Array.from(id).map(c => c.charCodeAt(0)) : "null/undefined");
+        
+        console.log("Lista de citas disponibles:");
+        listaCitas.forEach((c, index) => {
+            console.log(`  [${index}] ID: "${c.id}" (tipo: ${typeof c.id}, estado: ${c.estado})`);
+        });
+        
+        // Buscar la cita en la lista local para verificar que existe
+        console.log("Buscando cita con ID:", id);
+        const citaExiste = listaCitas.find(c => {
+            const match = String(c.id) === String(id);
+            console.log(`  Comparando "${c.id}" === "${id}": ${match}`);
+            return match;
+        });
+        
+        console.log("Resultado de búsqueda:", citaExiste);
+        
+        if (!citaExiste) {
+            console.error("❌ La cita no existe en la lista local");
+            console.log("IDs exactos en la lista:", listaCitas.map(c => c.id));
+            console.log("ID buscado:", id);
+            msgServidor.textContent = `❌ Error: La cita #${id} no existe en el sistema`;
+            msgServidor.style.background = "#f8d7da";
+            msgServidor.style.color = "#721c24";
+            msgServidor.style.padding = "1rem";
+            return;
+        }
+        
+        console.log("Estado actual de la cita:", citaExiste.estado);
+        
+        if (citaExiste.estado !== "programada") {
+            console.error("❌ La cita no está en estado programada");
+            msgServidor.textContent = `❌ Error: La cita #${id} no está en estado programada (estado actual: ${citaExiste.estado})`;
+            msgServidor.style.background = "#f8d7da";
+            msgServidor.style.color = "#721c24";
+            msgServidor.style.padding = "1rem";
+            return;
+        }
+        
+        console.log("✅ Validaciones pasadas, procediendo a cancelar...");
         tablaCitas.innerHTML = `<tr><td colspan="9" class="cargando" style="text-align:center; padding: 40px;">Cancelando cita ${id}...</td></tr>`;
         
-        await cancelarCita(id);
+        console.log("Llamando a cancelarCita() del API con ID:", id);
+        const resultado = await cancelarCita(id);
+        console.log("✅ Resultado de cancelarCita():", resultado);
+        console.log("Nuevo estado de la cita:", resultado.estado);
 
-        msgServidor.textContent = `✅ Cita #${id} ha sido cancelada.`;
-        msgServidor.style.background = "#f8d7da";
-        msgServidor.style.color = "#721c24";
+        if (resultado && resultado.estado === "cancelada") {
+            console.log("✅ Cita cancelada exitosamente en el servidor");
+            msgServidor.textContent = `✅ Cita #${id} ha sido cancelada correctamente`;
+            msgServidor.style.background = "#d4edda";
+            msgServidor.style.color = "#155724";
+            msgServidor.style.padding = "1rem";
+        } else {
+            console.warn("⚠️ La cita fue procesada pero el estado no cambió a cancelada");
+            msgServidor.textContent = `⚠️ La operación se completó pero verifica el estado de la cita`;
+            msgServidor.style.background = "#fff3cd";
+            msgServidor.style.color = "#856404";
+            msgServidor.style.padding = "1rem";
+        }
 
+        console.log("Recargando lista de citas...");
         await cargarCitas();
+        console.log("✅ Lista de citas recargada");
+        
+        // LIMPIAR FILTROS para mostrar todas las citas despues de cancelar
+        console.log("Limpiando filtros...");
+        filtroFecha.value = "";
+        filtroEstado.value = "";
+        filtroDoctor.value = "";
+        mostrarCitas(listaCitas); // Mostrar TODAS las citas
+        console.log("✅ Filtros limpiados, mostrando todas las citas");
 
         setTimeout(() => { 
             msgServidor.textContent = "";
@@ -552,13 +682,23 @@ async function cancelarCitaHandler(id) {
         }, 3000);
 
     } catch (error) {
+        console.error("=== ERROR AL CANCELAR CITA ===");
+        console.error("Error completo:", error);
+        console.error("Mensaje:", error.message);
+        console.error("Stack:", error.stack);
+        
         const errorMsg = error.message || "Error al cancelar la cita";
-        alert(`Error al cancelar: ${errorMsg}`);
+        msgServidor.textContent = `❌ ${errorMsg}`;
+        msgServidor.style.background = "#f8d7da";
+        msgServidor.style.color = "#721c24";
+        msgServidor.style.padding = "1rem";
+        
+        console.log("Recargando citas después del error...");
         await cargarCitas();
     }
 }
 
-// ---------- INICIALIZACIÓN ----------
+// ---------- INICIO ----------
 document.addEventListener("DOMContentLoaded", () => {
     cargarCitas();
 });

@@ -2,7 +2,6 @@ const tabla = document.getElementById("tablaPacientes");
 const buscador = document.getElementById("buscador");
 const btnBuscar = document.getElementById("btnBuscar");
 const btnNuevo = document.getElementById("btnNuevo");
-
 const formulario = document.getElementById("formularioPaciente");
 const formPaciente = document.getElementById("formPaciente");
 const btnCancelar = document.getElementById("btnCancelar");
@@ -13,9 +12,8 @@ let listaPacientes = [];
 let listaDoctores = [];
 let historialActual = [];
 
-// ============================
+
 // CARGAR DOCTORES
-// ============================
 async function cargarDoctores() {
   try {
     listaDoctores = await getDoctores();
@@ -24,19 +22,15 @@ async function cargarDoctores() {
   }
 }
 
-// ============================
+
 // CARGAR PACIENTES
-// ============================
 async function cargarPacientes() {
   const data = await getPacientes();
   if (!data) return;
   listaPacientes = data;
   mostrarPacientes(data);
-}
-
-// ============================
+ }
 // MOSTRAR PACIENTES EN TABLA
-// ============================
 function mostrarPacientes(pacientes) {
   tabla.innerHTML = "";
   if (!pacientes || pacientes.length === 0) {
@@ -54,17 +48,33 @@ function mostrarPacientes(pacientes) {
       <td>${p.email}</td>
       <td>${p.fechaRegistro}</td>
       <td>
-        <button onclick="verHistorial('${p.id}')" class="btn-actualizar" style="margin: 0.25rem;">📋 Historial</button>
-        <button onclick="editarPaciente('${p.id}')" class="btn-actualizar" style="margin: 0.25rem;">✏️ Editar</button>
+        <button data-action="historial" data-id="${p.id}" class="btn-actualizar" style="margin: 0.25rem;">📋 Historial</button>
+        <button data-action="editar" data-id="${p.id}" class="btn-actualizar" style="margin: 0.25rem;">✏️ Editar</button>
       </td>
     `;
     tabla.appendChild(tr);
   });
 }
 
-// ============================
+// ✅ EVENT DELEGATION para botones de la tabla
+document.addEventListener('click', function(e) {
+  const target = e.target;
+  
+  // Botón HISTORIAL
+  if (target.dataset.action === 'historial') {
+    const pacienteId = target.dataset.id;
+    verHistorial(pacienteId);
+  }
+  
+  // Botón EDITAR
+  if (target.dataset.action === 'editar') {
+    const pacienteId = target.dataset.id;
+    editarPaciente(pacienteId);
+  }
+});
+
+
 // BOTONES Y BUSCADOR
-// ============================
 btnBuscar.addEventListener("click", () => {
   msgServidor.textContent = "";
   const texto = buscador.value.toLowerCase();
@@ -92,9 +102,7 @@ btnCancelar.addEventListener("click", () => {
   formPaciente.removeAttribute("data-edit-id");
 });
 
-// ============================
 // VER HISTORIAL DE UN PACIENTE
-// ============================
 async function verHistorial(idPaciente) {
   const historialSection = document.getElementById("historialSection");
   const header = document.getElementById("headerPaciente");
@@ -186,9 +194,7 @@ function limpiarHistorial() {
   document.getElementById("tablaHistorial").innerHTML = "";
 }
 
-// ============================
 // EDITAR PACIENTE
-// ============================
 function editarPaciente(idPaciente) {
   const paciente = listaPacientes.find(p => p.id === idPaciente);
   if (!paciente) return alert("Paciente no encontrado");
@@ -213,9 +219,7 @@ function editarPaciente(idPaciente) {
   formulario.scrollIntoView({ behavior: 'smooth' });
 }
 
-// ============================
 // LIMPIAR ERRORES
-// ============================
 function limpiarErrores() {
   document.getElementById("errorNombre").textContent = "";
   document.getElementById("errorEdad").textContent = "";
@@ -223,9 +227,8 @@ function limpiarErrores() {
   document.getElementById("errorEmail").textContent = "";
 }
 
-// ============================
+
 // FORMULARIO SUBMIT
-// ============================
 formPaciente.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -238,7 +241,7 @@ formPaciente.addEventListener("submit", async (e) => {
   const telefono = formPaciente.telefono.value.trim();
   const email = formPaciente.email.value.trim();
 
-  // Validaciones
+  // Validaciones básicas
   if (!nombre) { 
     document.getElementById("errorNombre").textContent = "Ingrese el nombre"; 
     valido = false; 
@@ -268,6 +271,33 @@ formPaciente.addEventListener("submit", async (e) => {
   if (!valido) return;
 
   const editId = formPaciente.getAttribute("data-edit-id");
+
+  // ✅ VALIDACIÓN DE DUPLICADOS: Teléfono y Email
+  const telefonoExiste = listaPacientes.find(p => 
+    p.telefono === telefono && p.id !== editId
+  );
+  
+  const emailExiste = listaPacientes.find(p => 
+    p.email.toLowerCase() === email.toLowerCase() && p.id !== editId
+  );
+
+  if (telefonoExiste) {
+    document.getElementById("errorTelefono").textContent = "⚠️ Este teléfono ya está registrado";
+    msgServidor.textContent = "❌ El teléfono ya está registrado por otro paciente";
+    msgServidor.style.color = "#721c24";
+    msgServidor.style.background = "#f8d7da";
+    msgServidor.style.padding = "1rem";
+    return;
+  }
+
+  if (emailExiste) {
+    document.getElementById("errorEmail").textContent = "⚠️ Este email ya está registrado";
+    msgServidor.textContent = "❌ El email ya está registrado por otro paciente";
+    msgServidor.style.color = "#721c24";
+    msgServidor.style.background = "#f8d7da";
+    msgServidor.style.padding = "1rem";
+    return;
+  }
 
   try {
     msgServidor.textContent = "⏳ Guardando...";
@@ -314,9 +344,7 @@ formPaciente.addEventListener("submit", async (e) => {
   }
 });
 
-// ============================
 // INICIO
-// ============================
 document.addEventListener("DOMContentLoaded", async () => {
   await cargarDoctores();
   await cargarPacientes();
